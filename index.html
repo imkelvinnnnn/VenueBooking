@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Church Venue Booking</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+  <h1>Church Venue Booking</h1>
+
+  <form id="bookingForm">
+
+    <input type="text" id="memberCode" placeholder="Member Code (M12345)" required>
+
+    <input type="text" id="name" placeholder="Name" required>
+
+    <input type="text" id="phone" placeholder="Phone Number" required>
+
+    <input type="text" id="eventTitle" placeholder="Event Title" required>
+
+    <input type="datetime-local" id="start" required>
+
+    <input type="number" id="duration" placeholder="Duration (hours)" required>
+
+    <select id="location" required>
+      <option value="">Select Venue</option>
+    </select>
+
+    <button type="submit">Book Venue</button>
+
+  </form>
+
+  <div id="message"></div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
