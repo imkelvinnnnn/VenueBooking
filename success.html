@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Confirmed — Church Venue Booking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="page-bg">
+    <div class="cross-pattern"></div>
+  </div>
+
+  <div class="container">
+
+    <header class="site-header">
+      <div class="logo-mark">✦</div>
+      <h1>Venue Booking</h1>
+      <p class="subtitle">Reserve a space for your gathering</p>
+    </header>
+
+    <div class="form-card success-card">
+      <div class="success-icon">✓</div>
+      <h2 class="success-title">Booking Confirmed!</h2>
+      <p class="success-message">Your venue has been successfully reserved. A confirmation has been recorded below.</p>
+
+      <div id="bookingSummary" class="booking-summary"></div>
+
+      <div class="booking-ref-box">
+        <span class="ref-label">Reference Number</span>
+        <span class="ref-number" id="refNumber">—</span>
+      </div>
+
+      <div class="success-actions">
+        <button onclick="window.print()" class="btn-print">🖨 Print Confirmation</button>
+        <a href="index.html" class="btn-new">Make Another Booking</a>
+      </div>
+
+      <p class="success-note">Please arrive 15 minutes before your booking. Contact the church office if you need to make changes.</p>
+    </div>
+
+  </div>
+
+  <script>
+    const data = JSON.parse(sessionStorage.getItem('confirmedBooking') || 'null');
+
+    if (!data) {
+      window.location.href = 'index.html';
+    } else {
+      const venueLabels = {
+        'main-hall': 'Main Hall',
+        'chapel': 'Chapel',
+        'fellowship-room': 'Fellowship Room',
+        'prayer-room': 'Prayer Room',
+        'youth-hall': 'Youth Hall'
+      };
+
+      const startDt = new Date(data.start);
+      const endDt = new Date(startDt.getTime() + data.duration * 3600000);
+      const fmt = dt => dt.toLocaleString('en-MY', {
+        weekday: 'long', year: 'numeric', month: 'long',
+        day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+
+      document.getElementById('refNumber').textContent = data.ref;
+
+      const rows = [
+        ['Member Code', data.memberCode],
+        ['Name', data.name],
+        ['Email', data.email],
+        ['Phone', data.phone],
+        ['Event', data.eventTitle],
+        ['Venue', venueLabels[data.location] || data.location],
+        ['Start', fmt(startDt)],
+        ['End', fmt(endDt)],
+        ['Duration', data.duration + (data.duration === 1 ? ' hour' : ' hours')],
+        ...(data.notes ? [['Notes', data.notes]] : [])
+      ];
+
+      document.getElementById('bookingSummary').innerHTML = rows.map(([label, val]) => `
+        <div class="summary-row">
+          <span class="summary-label">${label}</span>
+          <span class="summary-value">${val}</span>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

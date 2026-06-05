@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Church Venue Booking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-page">
+
+  <div class="page-bg">
+    <div class="cross-pattern"></div>
+  </div>
+
+  <div class="container">
+
+    <header class="site-header">
+      <div class="logo-mark">✦</div>
+      <h1>Admin Dashboard</h1>
+      <p class="subtitle">Review venue booking requests</p>
+      <nav class="page-links" aria-label="Page links">
+        <a href="index.html">Booking Form</a>
+      </nav>
+    </header>
+
+    <main class="admin-shell">
+      <section class="admin-toolbar" aria-label="Booking filters">
+        <div class="field-group">
+          <label for="adminDate">Booking Date</label>
+          <input type="date" id="adminDate">
+        </div>
+
+        <div class="field-group">
+          <label for="adminStatus">Status</label>
+          <select id="adminStatus">
+            <option value="all" selected>All bookings</option>
+            <option value="pending">Pending approval</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn-refresh admin-refresh" id="adminRefresh">Refresh</button>
+      </section>
+
+      <section class="admin-summary" aria-label="Booking summary">
+        <article class="summary-card">
+          <span class="summary-count" id="totalCount">0</span>
+          <span class="summary-text">Total</span>
+        </article>
+        <article class="summary-card">
+          <span class="summary-count" id="pendingCount">0</span>
+          <span class="summary-text">Pending</span>
+        </article>
+        <article class="summary-card">
+          <span class="summary-count" id="approvedCount">0</span>
+          <span class="summary-text">Approved</span>
+        </article>
+        <article class="summary-card">
+          <span class="summary-count" id="rejectedCount">0</span>
+          <span class="summary-text">Rejected</span>
+        </article>
+      </section>
+
+      <p class="admin-message" id="adminMessage">Loading bookings...</p>
+
+      <section class="admin-table-wrap" aria-label="Bookings table">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Event</th>
+              <th scope="col">Requester</th>
+              <th scope="col">Venue</th>
+              <th scope="col">Schedule</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminBookingRows">
+            <tr>
+              <td colspan="7" class="empty-cell">Loading bookings...</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

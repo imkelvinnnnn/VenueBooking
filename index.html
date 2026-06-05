@@ -1,42 +1,151 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Church Venue Booking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
+  <div class="page-bg">
+    <div class="cross-pattern"></div>
+  </div>
 
-  <h1>Church Venue Booking</h1>
+  <div class="container">
 
-  <form id="bookingForm">
+    <header class="site-header">
+      <div class="logo-mark">✦</div>
+      <h1>Venue Booking</h1>
+      <p class="subtitle">Reserve a space for your gathering</p>
+      <nav class="page-links" aria-label="Page links">
+        <a href="admin.html">Admin Dashboard</a>
+      </nav>
+    </header>
 
-    <input type="text" id="memberCode" placeholder="Member Code (M12345)" required>
+    <div class="form-card">
 
-    <input type="text" id="name" placeholder="Name" required>
+      <form id="bookingForm" novalidate>
 
-    <input type="text" id="phone" placeholder="Phone Number" required>
+        <div class="section-label">Member Details</div>
 
-    <input type="text" id="eventTitle" placeholder="Event Title" required>
+        <div class="field-row two-col">
+          <div class="field-group">
+            <label for="memberCode">Member Code</label>
+            <input type="text" id="memberCode" placeholder="M12345" maxlength="10" autocomplete="off">
+            <span class="field-error" id="memberCodeError"></span>
+          </div>
+          <div class="field-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" placeholder="Your full name" autocomplete="name">
+            <span class="field-error" id="nameError"></span>
+          </div>
+        </div>
 
-    <input type="datetime-local" id="start" required>
+        <div class="field-row two-col">
+          <div class="field-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+            <span class="field-error" id="emailError"></span>
+          </div>
+          <div class="field-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" placeholder="+60 12-345 6789" autocomplete="tel">
+            <span class="field-error" id="phoneError"></span>
+          </div>
+        </div>
 
-    <input type="number" id="duration" placeholder="Duration (hours)" required>
+        <div class="divider"></div>
+        <div class="section-label">Event Details</div>
 
-    <select id="location" required>
-      <option value="">Select Venue</option>
-    </select>
+        <div class="field-group">
+          <label for="eventTitle">Event Title</label>
+          <input type="text" id="eventTitle" placeholder="e.g. Sunday Youth Fellowship" maxlength="100">
+          <span class="field-error" id="eventTitleError"></span>
+        </div>
 
-    <button type="submit">Book Venue</button>
+        <div class="field-row two-col">
+          <div class="field-group">
+            <label for="start">Date &amp; Start Time</label>
+            <input type="datetime-local" id="start">
+            <span class="field-error" id="startError"></span>
+          </div>
+          <div class="field-group">
+            <label for="duration">Duration (hours)</label>
+            <input type="number" id="duration" placeholder="e.g. 2" min="0.5" max="12" step="0.5">
+            <span class="field-error" id="durationError"></span>
+          </div>
+        </div>
 
-  </form>
+        <div class="field-group">
+          <label for="location">Venue</label>
+          <select id="location">
+            <option value="">— Select a venue —</option>
+          </select>
+          <span class="field-error" id="locationError"></span>
+        </div>
 
-  <div id="message"></div>
+        <div class="availability-section">
+          <div class="availability-heading">
+            <div>
+              <div class="section-label">Availability</div>
+              <p class="availability-copy">View the current booking status before choosing your time.</p>
+            </div>
+            <button type="button" class="btn-refresh" id="refreshAvailability">Refresh</button>
+          </div>
 
-</div>
+          <div class="field-row two-col availability-controls">
+            <div class="field-group">
+              <label for="availabilityDate">Chart Date</label>
+              <input type="date" id="availabilityDate">
+            </div>
+            <div class="field-group">
+              <label>Legend</label>
+              <div class="availability-legend" aria-label="Availability legend">
+                <span><i class="legend-dot legend-dot-open"></i>Available</span>
+                <span><i class="legend-dot legend-dot-pending"></i>Pending</span>
+                <span><i class="legend-dot legend-dot-booked"></i>Booked</span>
+              </div>
+            </div>
+          </div>
 
-<script src="script.js"></script>
+          <p class="availability-message" id="availabilityMessage">Loading availability…</p>
+          <div class="availability-chart-wrap">
+            <table class="availability-chart" id="availabilityChart" aria-label="Venue availability chart"></table>
+          </div>
+        </div>
 
+        <div class="field-group">
+          <label for="notes">Additional Notes <span class="optional">(optional)</span></label>
+          <textarea id="notes" placeholder="Any special requirements, setup needs, equipment requests…" rows="3"></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <span class="btn-text">Check Availability &amp; Book</span>
+          <span class="btn-icon">→</span>
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
+    <div class="modal-box">
+      <div class="modal-icon">📋</div>
+      <h2 id="modalTitle">Confirm Your Booking</h2>
+      <p class="modal-intro">Please review your booking details before confirming.</p>
+      <div id="confirmDetails" class="confirm-details"></div>
+      <div class="modal-actions">
+        <button id="confirmBtn" class="btn-confirm">Confirm Booking</button>
+        <button id="cancelBtn" class="btn-cancel">Go Back</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
