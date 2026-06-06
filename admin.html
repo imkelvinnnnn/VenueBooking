@@ -64,6 +64,36 @@
         </article>
       </section>
 
+      <section class="availability-section admin-availability" aria-label="Venue availability">
+        <div class="availability-heading">
+          <div>
+            <div class="section-label">Venue Availability</div>
+            <p class="availability-copy">View pending and approved bookings across all venues.</p>
+          </div>
+          <button type="button" class="btn-refresh" id="adminAvailabilityRefresh">Refresh Chart</button>
+        </div>
+
+        <div class="field-row two-col availability-controls">
+          <div class="field-group">
+            <label for="adminAvailabilityDate">Chart Date</label>
+            <input type="date" id="adminAvailabilityDate">
+          </div>
+          <div class="field-group">
+            <label>Legend</label>
+            <div class="availability-legend" aria-label="Availability legend">
+              <span><i class="legend-dot legend-dot-open"></i>Available</span>
+              <span><i class="legend-dot legend-dot-pending"></i>Pending</span>
+              <span><i class="legend-dot legend-dot-booked"></i>Approved</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="availability-message" id="adminAvailabilityMessage">Loading availability...</p>
+        <div class="availability-chart-wrap">
+          <table class="availability-chart" id="adminAvailabilityChart" aria-label="Admin venue availability chart"></table>
+        </div>
+      </section>
+
       <p class="admin-message" id="adminMessage">Loading bookings...</p>
 
       <section class="admin-table-wrap" aria-label="Bookings table">

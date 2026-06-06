@@ -5,8 +5,18 @@ const dateFilter = document.getElementById('adminDate');
 const refreshButton = document.getElementById('adminRefresh');
 const rowsEl = document.getElementById('adminBookingRows');
 const messageEl = document.getElementById('adminMessage');
+const availabilityDate = document.getElementById('adminAvailabilityDate');
+const availabilityRefresh = document.getElementById('adminAvailabilityRefresh');
+const availabilityChart = document.getElementById('adminAvailabilityChart');
+const availabilityMessage = document.getElementById('adminAvailabilityMessage');
+
+const DEFAULT_VENUES = ['Main Hall', 'Chapel', 'Fellowship Room', 'Prayer Room', 'Youth Hall'];
+const CHART_START_HOUR = 8;
+const CHART_END_HOUR = 22;
 
 let bookings = [];
+let availabilityBookings = [];
+let venues = [...DEFAULT_VENUES];
 
 function localDateValue(date) {
   const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
@@ -16,6 +26,11 @@ function localDateValue(date) {
 function setMessage(message, state = '') {
   messageEl.textContent = message;
   messageEl.dataset.state = state;
+}
+
+function setAvailabilityMessage(message, state = '') {
+  availabilityMessage.textContent = message;
+  availabilityMessage.dataset.state = state;
 }
 
 function readField(row, names) {
@@ -104,6 +119,123 @@ function formatDateTime(date) {
 function formatSchedule(booking) {
   if (!booking.start) return 'Date not set';
   return `${formatDateTime(booking.start)}<br><span>${booking.end ? `Until ${formatDateTime(booking.end)}` : ''}</span>`;
+}
+
+function formatSlotTime(date) {
+  return date.toLocaleTimeString('en-MY', { hour: 'numeric', minute: '2-digit' });
+}
+
+function venueKey(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function overlaps(aStart, aEnd, bStart, bEnd) {
+  return aStart < bEnd && aEnd > bStart;
+}
+
+function renderAvailabilityChart() {
+  const dateValue = availabilityDate.value || localDateValue(new Date());
+  const chartDay = new Date(`${dateValue}T00:00:00`);
+  const chartBookings = availabilityBookings.filter(booking =>
+    booking.status !== 'rejected' &&
+    booking.start &&
+    localDateValue(booking.start) === dateValue
+  );
+
+  const head = `
+    <thead>
+      <tr>
+        <th scope="col">Time</th>
+        ${venues.map(venue => `<th scope="col">${escapeHtml(venue)}</th>`).join('')}
+      </tr>
+    </thead>
+  `;
+
+  const rows = [];
+  for (let hour = CHART_START_HOUR; hour < CHART_END_HOUR; hour++) {
+    const slotStart = new Date(chartDay);
+    slotStart.setHours(hour, 0, 0, 0);
+    const slotEnd = new Date(slotStart.getTime() + 3600000);
+
+    const cells = venues.map(venue => {
+      const booking = chartBookings.find(item =>
+        venueKey(item.venue) === venueKey(venue) &&
+        item.end &&
+        overlaps(slotStart, slotEnd, item.start, item.end)
+      );
+      const state = booking ? (booking.status === 'pending' ? 'pending' : 'booked') : 'open';
+      const label = booking ? (booking.status === 'pending' ? 'Pending' : 'Approved') : 'Available';
+      const title = booking
+        ? `${booking.title}: ${formatSlotTime(booking.start)}-${formatSlotTime(booking.end)}`
+        : 'Available';
+
+      return `
+        <td class="availability-cell availability-cell-${state}" title="${escapeHtml(title)}">
+          <span>${label}</span>
+        </td>
+      `;
+    }).join('');
+
+    rows.push(`
+      <tr>
+        <th scope="row">${formatSlotTime(slotStart)}</th>
+        ${cells}
+      </tr>
+    `);
+  }
+
+  availabilityChart.innerHTML = `${head}<tbody>${rows.join('')}</tbody>`;
+}
+
+async function loadVenues() {
+  try {
+    const res = await fetch(`${API_URL}?action=getVenues`);
+    const data = await res.json();
+    const loadedVenues = Array.isArray(data)
+      ? data.map(venue => String(typeof venue === 'string' ? venue : (venue?.name || venue?.venue || venue?.location || '')).trim()).filter(Boolean)
+      : [];
+
+    venues = loadedVenues.length ? [...new Set(loadedVenues)] : [...DEFAULT_VENUES];
+  } catch (err) {
+    venues = [...DEFAULT_VENUES];
+    console.warn('Could not load venues for admin availability:', err);
+  }
+
+  renderAvailabilityChart();
+}
+
+async function loadAdminAvailability() {
+  const dateValue = availabilityDate.value || localDateValue(new Date());
+  availabilityDate.value = dateValue;
+  setAvailabilityMessage('Loading availability...', 'loading');
+  renderAvailabilityChart();
+
+  try {
+    const params = new URLSearchParams({ action: 'getBookings', date: dateValue });
+    const res = await fetch(`${API_URL}?${params.toString()}`);
+    const data = await res.json();
+
+    availabilityBookings = normalizeBookings(data);
+    renderAvailabilityChart();
+
+    const activeCount = availabilityBookings.filter(booking =>
+      booking.status !== 'rejected' &&
+      booking.start &&
+      localDateValue(booking.start) === dateValue
+    ).length;
+
+    setAvailabilityMessage(
+      activeCount
+        ? `Showing ${activeCount} pending or approved booking${activeCount === 1 ? '' : 's'} for ${dateValue}.`
+        : `No pending or approved bookings found for ${dateValue}.`,
+      'ready'
+    );
+  } catch (err) {
+    availabilityBookings = [];
+    renderAvailabilityChart();
+    setAvailabilityMessage('Could not load availability from Google Sheets.', 'error');
+    console.error('Admin availability error:', err);
+  }
 }
 
 function visibleBookings() {
@@ -217,7 +349,7 @@ async function updateBookingStatus(bookingId, status) {
     }
 
     setMessage(`${booking.ref} has been ${status}.`, 'ready');
-    loadBookings();
+    await Promise.all([loadBookings(), loadAdminAvailability()]);
   } catch (err) {
     booking.status = previousStatus;
     renderRows();
@@ -234,10 +366,15 @@ rowsEl.addEventListener('click', event => {
 });
 
 refreshButton.addEventListener('click', loadBookings);
+availabilityRefresh.addEventListener('click', loadAdminAvailability);
+availabilityDate.addEventListener('change', loadAdminAvailability);
 statusFilter.addEventListener('change', () => {
   renderRows();
   setMessage(`Showing ${visibleBookings().length} booking${visibleBookings().length === 1 ? '' : 's'}.`, 'ready');
 });
 dateFilter.addEventListener('change', loadBookings);
 
+availabilityDate.value = localDateValue(new Date());
+loadVenues();
+loadAdminAvailability();
 loadBookings();
