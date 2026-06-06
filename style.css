@@ -803,6 +803,96 @@ input::placeholder, textarea::placeholder {
   text-transform: uppercase;
 }
 
+/* Recurring admin bookings */
+.recurring-booking-section {
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+  padding: 24px 0;
+  margin-bottom: 24px;
+}
+
+.recurring-count {
+  flex: 0 0 auto;
+  background: var(--gold-pale);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius);
+  color: var(--brown-mid);
+  padding: 7px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.recurring-form {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.recurring-form .field-group {
+  margin-bottom: 0;
+}
+
+.recurring-event-field {
+  grid-column: span 2;
+}
+
+.btn-create-recurring {
+  min-height: 42px;
+  padding: 10px 14px;
+  background: var(--brown-dark);
+  color: var(--gold-pale);
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.btn-create-recurring:hover {
+  background: var(--brown-mid);
+}
+
+.btn-create-recurring:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.recurring-message {
+  min-height: 20px;
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.recurring-message[data-state="error"] {
+  color: var(--error);
+}
+
+.recurring-message[data-state="success"] {
+  color: var(--success-green);
+}
+
+.recurring-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.recurring-preview span {
+  background: var(--cream);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  padding: 4px 7px;
+  font-size: 11px;
+}
+
 .admin-message {
   min-height: 20px;
   color: var(--text-muted);
@@ -996,6 +1086,8 @@ input::placeholder, textarea::placeholder {
   .admin-shell { padding: 20px; }
   .admin-toolbar { grid-template-columns: 1fr; }
   .admin-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .recurring-form { grid-template-columns: 1fr; }
+  .recurring-event-field { grid-column: auto; }
   .modal-box { padding: 28px 24px; }
   .modal-actions, .success-actions { flex-direction: column; }
   .site-header h1 { font-size: 30px; }

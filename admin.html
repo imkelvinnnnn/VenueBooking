@@ -64,6 +64,85 @@
         </article>
       </section>
 
+      <section class="recurring-booking-section" aria-labelledby="recurringBookingTitle">
+        <div class="availability-heading">
+          <div>
+            <div class="section-label" id="recurringBookingTitle">Recurring Booking</div>
+            <p class="availability-copy">Reserve the same venue every week across a selected date range.</p>
+          </div>
+          <span class="recurring-count" id="recurringCount">0 occurrences</span>
+        </div>
+
+        <form id="recurringBookingForm" class="recurring-form">
+          <div class="field-group recurring-event-field">
+            <label for="recurringEventTitle">Event Title</label>
+            <input type="text" id="recurringEventTitle" placeholder="e.g. Teens Fellowship" required>
+          </div>
+
+          <div class="field-group">
+            <label for="recurringVenue">Venue</label>
+            <select id="recurringVenue" required>
+              <option value="">Select venue</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="recurringWeekday">Every</label>
+            <select id="recurringWeekday" required>
+              <option value="0">Sunday</option>
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="recurringStartTime">Start Time</label>
+            <input type="time" id="recurringStartTime" required>
+          </div>
+
+          <div class="field-group">
+            <label for="recurringEndTime">End Time</label>
+            <input type="time" id="recurringEndTime" required>
+          </div>
+
+          <div class="field-group">
+            <label for="recurringFromDate">From Date</label>
+            <input type="date" id="recurringFromDate" required>
+          </div>
+
+          <div class="field-group">
+            <label for="recurringUntilDate">Until Date</label>
+            <input type="date" id="recurringUntilDate" required>
+          </div>
+
+          <div class="field-group">
+            <label for="recurringOrganizer">Organizer</label>
+            <input type="text" id="recurringOrganizer" placeholder="Church Admin">
+          </div>
+
+          <div class="field-group">
+            <label for="recurringMemberCode">Member Code</label>
+            <input type="text" id="recurringMemberCode" placeholder="ADMIN">
+          </div>
+
+          <div class="field-group">
+            <label for="recurringPhone">Phone</label>
+            <input type="tel" id="recurringPhone" placeholder="Optional">
+          </div>
+
+          <button type="submit" class="btn-create-recurring" id="createRecurringButton">
+            Create Recurring Bookings
+          </button>
+        </form>
+
+        <p class="recurring-message" id="recurringMessage"></p>
+        <div class="recurring-preview" id="recurringPreview"></div>
+      </section>
+
       <section class="availability-section admin-availability" aria-label="Venue availability">
         <div class="availability-heading">
           <div>

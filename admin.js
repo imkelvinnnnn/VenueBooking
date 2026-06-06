@@ -9,10 +9,17 @@ const availabilityDate = document.getElementById('adminAvailabilityDate');
 const availabilityRefresh = document.getElementById('adminAvailabilityRefresh');
 const availabilityChart = document.getElementById('adminAvailabilityChart');
 const availabilityMessage = document.getElementById('adminAvailabilityMessage');
+const recurringForm = document.getElementById('recurringBookingForm');
+const recurringVenue = document.getElementById('recurringVenue');
+const recurringCount = document.getElementById('recurringCount');
+const recurringMessage = document.getElementById('recurringMessage');
+const recurringPreview = document.getElementById('recurringPreview');
+const createRecurringButton = document.getElementById('createRecurringButton');
 
 const DEFAULT_VENUES = ['Main Hall', 'Chapel', 'Fellowship Room', 'Prayer Room', 'Youth Hall'];
 const CHART_START_HOUR = 8;
 const CHART_END_HOUR = 22;
+const MAX_RECURRING_OCCURRENCES = 104;
 
 let bookings = [];
 let availabilityBookings = [];
@@ -31,6 +38,11 @@ function setMessage(message, state = '') {
 function setAvailabilityMessage(message, state = '') {
   availabilityMessage.textContent = message;
   availabilityMessage.dataset.state = state;
+}
+
+function setRecurringMessage(message, state = '') {
+  recurringMessage.textContent = message;
+  recurringMessage.dataset.state = state;
 }
 
 function readField(row, names) {
@@ -125,6 +137,60 @@ function formatSlotTime(date) {
   return date.toLocaleTimeString('en-MY', { hour: 'numeric', minute: '2-digit' });
 }
 
+function parseLocalDate(value) {
+  const date = value ? new Date(`${value}T00:00:00`) : null;
+  return date && !Number.isNaN(date.getTime()) ? date : null;
+}
+
+function recurringOccurrences() {
+  const from = parseLocalDate(document.getElementById('recurringFromDate').value);
+  const until = parseLocalDate(document.getElementById('recurringUntilDate').value);
+  const weekday = Number(document.getElementById('recurringWeekday').value);
+
+  if (!from || !until || from > until || !Number.isInteger(weekday)) return [];
+
+  const first = new Date(from);
+  first.setDate(first.getDate() + ((weekday - first.getDay() + 7) % 7));
+
+  const occurrences = [];
+  for (const date = new Date(first); date <= until && occurrences.length <= MAX_RECURRING_OCCURRENCES; date.setDate(date.getDate() + 7)) {
+    occurrences.push(new Date(date));
+  }
+
+  return occurrences;
+}
+
+function validateRecurringBooking() {
+  const title = document.getElementById('recurringEventTitle').value.trim();
+  const venue = recurringVenue.value;
+  const startTime = document.getElementById('recurringStartTime').value;
+  const endTime = document.getElementById('recurringEndTime').value;
+  const from = parseLocalDate(document.getElementById('recurringFromDate').value);
+  const until = parseLocalDate(document.getElementById('recurringUntilDate').value);
+  const occurrences = recurringOccurrences();
+
+  if (!title || !venue || !startTime || !endTime || !from || !until) {
+    return 'Complete all required recurring booking fields.';
+  }
+  if (from > until) return 'The until date must be on or after the from date.';
+  if (endTime <= startTime) return 'The end time must be later than the start time.';
+  if (!occurrences.length) return 'No matching weekday occurs inside this date range.';
+  if (occurrences.length > MAX_RECURRING_OCCURRENCES) {
+    return `A recurring booking can contain at most ${MAX_RECURRING_OCCURRENCES} occurrences.`;
+  }
+  return '';
+}
+
+function renderRecurringPreview() {
+  const occurrences = recurringOccurrences();
+  const visibleOccurrences = occurrences.slice(0, 8);
+
+  recurringCount.textContent = `${Math.min(occurrences.length, MAX_RECURRING_OCCURRENCES)} occurrence${occurrences.length === 1 ? '' : 's'}`;
+  recurringPreview.innerHTML = visibleOccurrences.map(date =>
+    `<span>${escapeHtml(date.toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }))}</span>`
+  ).join('') + (occurrences.length > visibleOccurrences.length ? `<span>+${occurrences.length - visibleOccurrences.length} more</span>` : '');
+}
+
 function venueKey(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
@@ -202,6 +268,9 @@ async function loadVenues() {
   }
 
   renderAvailabilityChart();
+  recurringVenue.innerHTML = '<option value="">Select venue</option>' + venues
+    .map(venue => `<option value="${escapeHtml(venue)}">${escapeHtml(venue)}</option>`)
+    .join('');
 }
 
 async function loadAdminAvailability() {
@@ -235,6 +304,62 @@ async function loadAdminAvailability() {
     renderAvailabilityChart();
     setAvailabilityMessage('Could not load availability from Google Sheets.', 'error');
     console.error('Admin availability error:', err);
+  }
+}
+
+async function createRecurringBookings(event) {
+  event.preventDefault();
+
+  const validationError = validateRecurringBooking();
+  if (validationError) {
+    setRecurringMessage(validationError, 'error');
+    return;
+  }
+
+  const occurrences = recurringOccurrences();
+  const payload = {
+    action: 'createRecurringBookings',
+    eventTitle: document.getElementById('recurringEventTitle').value.trim(),
+    location: recurringVenue.value,
+    weekday: Number(document.getElementById('recurringWeekday').value),
+    startTime: document.getElementById('recurringStartTime').value,
+    endTime: document.getElementById('recurringEndTime').value,
+    fromDate: document.getElementById('recurringFromDate').value,
+    untilDate: document.getElementById('recurringUntilDate').value,
+    organizer: document.getElementById('recurringOrganizer').value.trim() || 'Church Admin',
+    memberCode: document.getElementById('recurringMemberCode').value.trim() || 'ADMIN',
+    phone: document.getElementById('recurringPhone').value.trim(),
+    status: 'Approved'
+  };
+
+  createRecurringButton.disabled = true;
+  createRecurringButton.textContent = 'Creating...';
+  setRecurringMessage(`Creating ${occurrences.length} recurring bookings...`, 'loading');
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+
+    if (result.success !== true) {
+      throw new Error(result.message || result.error || 'The recurring bookings could not be created.');
+    }
+
+    const created = Number(result.createdCount ?? result.created ?? occurrences.length);
+    const skipped = Number(result.skippedCount ?? result.skipped ?? 0);
+    setRecurringMessage(
+      `Created ${created} approved booking${created === 1 ? '' : 's'}${skipped ? `; skipped ${skipped} conflicting date${skipped === 1 ? '' : 's'}` : ''}.`,
+      'success'
+    );
+    await Promise.all([loadBookings(), loadAdminAvailability()]);
+  } catch (err) {
+    setRecurringMessage(`Could not create recurring bookings. ${err.message}`, 'error');
+    console.error('Recurring booking error:', err);
+  } finally {
+    createRecurringButton.disabled = false;
+    createRecurringButton.textContent = 'Create Recurring Bookings';
   }
 }
 
@@ -368,13 +493,27 @@ rowsEl.addEventListener('click', event => {
 refreshButton.addEventListener('click', loadBookings);
 availabilityRefresh.addEventListener('click', loadAdminAvailability);
 availabilityDate.addEventListener('change', loadAdminAvailability);
+recurringForm.addEventListener('submit', createRecurringBookings);
+recurringForm.querySelectorAll('input, select').forEach(input => {
+  input.addEventListener('input', renderRecurringPreview);
+  input.addEventListener('change', renderRecurringPreview);
+});
 statusFilter.addEventListener('change', () => {
   renderRows();
   setMessage(`Showing ${visibleBookings().length} booking${visibleBookings().length === 1 ? '' : 's'}.`, 'ready');
 });
 dateFilter.addEventListener('change', loadBookings);
 
-availabilityDate.value = localDateValue(new Date());
+const today = new Date();
+const threeMonthsFromToday = new Date(today);
+threeMonthsFromToday.setMonth(threeMonthsFromToday.getMonth() + 3);
+
+availabilityDate.value = localDateValue(today);
+document.getElementById('recurringFromDate').value = localDateValue(today);
+document.getElementById('recurringUntilDate').value = localDateValue(threeMonthsFromToday);
+document.getElementById('recurringStartTime').value = '13:30';
+document.getElementById('recurringEndTime').value = '15:30';
+renderRecurringPreview();
 loadVenues();
 loadAdminAvailability();
 loadBookings();
