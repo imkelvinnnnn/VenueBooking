@@ -72,7 +72,7 @@ body {
 .container {
   position: relative;
   z-index: 1;
-  max-width: 680px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 48px 24px 80px;
 }
@@ -1091,4 +1091,255 @@ input::placeholder, textarea::placeholder {
   .modal-box { padding: 28px 24px; }
   .modal-actions, .success-actions { flex-direction: column; }
   .site-header h1 { font-size: 30px; }
+}
+
+/* ══════════════════════════════════════════════════════
+   Admin additions — append these rules to style.css
+   (or @import this file after style.css)
+   ══════════════════════════════════════════════════════ */
+
+/* Wider container on admin pages */
+.admin-page .container { max-width: 1400px; }
+
+/* ── Collapsible panels ── */
+.collapsible-panel {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.collapsible-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--parchment);
+  border: none;
+  cursor: pointer;
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brown-mid);
+  text-align: left;
+  transition: background 0.2s;
+}
+.collapsible-trigger:hover { background: var(--gold-pale); }
+
+.collapsible-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.collapsible-trigger-icon { font-size: 16px; }
+
+.collapsible-chevron {
+  font-style: normal;
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+.collapsible-panel.open .collapsible-chevron { transform: rotate(180deg); }
+
+.collapsible-body {
+  display: none;
+  padding: 24px 20px;
+  background: #fff;
+  border-top: 1px solid var(--border-light);
+}
+.collapsible-panel.open .collapsible-body { display: block; }
+
+/* ── Filter bar ── */
+.admin-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 16px;
+}
+.admin-filter-bar .field-group {
+  margin-bottom: 0;
+  flex: 1 1 150px;
+  max-width: 210px;
+}
+.admin-filter-bar .btn-refresh { flex: 0 0 auto; min-height: 42px; }
+
+.btn-reset-filters {
+  flex: 0 0 auto;
+  min-height: 42px;
+  padding: 9px 14px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-reset-filters:hover { background: var(--parchment); }
+
+/* ── Sortable column headers ── */
+.admin-table th[data-sort] {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.admin-table th[data-sort]:hover { background: var(--gold-pale); }
+
+.sort-icon {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 10px;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+}
+.sort-icon.active { opacity: 1; color: var(--gold); }
+
+/* ── Edit button ── */
+.btn-edit {
+  width: 100%;
+  min-height: 32px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-mid);
+  background: #fff;
+  color: var(--brown-mid);
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-edit:hover { background: var(--parchment); }
+.btn-edit:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Edit booking modal ── */
+.edit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 18, 8, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.edit-modal-overlay[hidden] { display: none; }
+
+.edit-modal-box {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;
+  max-width: 560px;
+  width: 100%;
+  border: 1px solid var(--border-light);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalIn 0.25s ease;
+}
+
+.edit-modal-box h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--brown-dark);
+  margin-bottom: 20px;
+}
+
+.edit-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* ── Block dates panel ── */
+.block-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+.block-form .field-group { margin-bottom: 0; }
+
+.blocked-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.blocked-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--booked-bg);
+  color: var(--booked-text);
+  border: 1px solid rgba(143, 42, 29, 0.2);
+  border-radius: var(--radius);
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.blocked-tag button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--booked-text);
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.7;
+}
+.blocked-tag button:hover { opacity: 1; }
+
+.block-message {
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  min-height: 18px;
+}
+.block-message[data-state="error"]   { color: var(--error); }
+.block-message[data-state="success"] { color: var(--success-green); }
+
+/* ── Radio group (used in block panel) ── */
+.radio-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+.radio-group input[type="radio"] {
+  width: auto;
+  accent-color: var(--gold);
+}
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+  .admin-filter-bar .field-group { max-width: 100%; }
+  .block-form { grid-template-columns: 1fr; }
+  .edit-modal-box { padding: 24px 20px; }
+  .edit-modal-actions { flex-direction: column; }
 }

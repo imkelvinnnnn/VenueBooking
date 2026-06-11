@@ -7,15 +7,161 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    .admin-page .container { max-width: 1400px; }
+
+    .collapsible-panel {
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .collapsible-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: var(--parchment);
+      border: none;
+      cursor: pointer;
+      font-family: 'Jost', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--brown-mid);
+      transition: background 0.2s;
+      text-align: left;
+      gap: 12px;
+    }
+    .collapsible-trigger:hover { background: var(--gold-pale); }
+    .collapsible-trigger-left { display: flex; align-items: center; gap: 10px; }
+    .collapsible-trigger-icon { font-size: 16px; }
+    .collapsible-chevron { transition: transform 0.25s ease; font-style: normal; font-size: 14px; color: var(--text-muted); }
+    .collapsible-panel.open .collapsible-chevron { transform: rotate(180deg); }
+    .collapsible-body { display: none; padding: 24px 20px; background: #fff; border-top: 1px solid var(--border-light); }
+    .collapsible-panel.open .collapsible-body { display: block; }
+
+    .admin-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: 16px;
+    }
+    .admin-filter-bar .field-group { margin-bottom: 0; flex: 1 1 150px; max-width: 210px; }
+    .admin-filter-bar .btn-refresh { flex: 0 0 auto; min-height: 42px; }
+
+    .btn-reset-filters {
+      flex: 0 0 auto;
+      min-height: 42px;
+      padding: 9px 14px;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      font-family: 'Jost', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-reset-filters:hover { background: var(--parchment); }
+
+    .admin-table th[data-sort] { cursor: pointer; user-select: none; white-space: nowrap; }
+    .admin-table th[data-sort]:hover { background: var(--gold-pale); }
+    .sort-icon { display: inline-block; margin-left: 4px; opacity: 0.4; font-size: 10px; }
+    .sort-icon.active { opacity: 1; color: var(--gold); }
+
+    .btn-edit {
+      width: 100%;
+      min-height: 32px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-mid);
+      background: #fff;
+      color: var(--brown-mid);
+      font-family: 'Jost', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-edit:hover { background: var(--parchment); }
+
+    .edit-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(26,18,8,0.55);
+      backdrop-filter: blur(3px);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .edit-modal-overlay[hidden] { display: none; }
+    .edit-modal-box {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      padding: 36px 40px;
+      max-width: 560px;
+      width: 100%;
+      border: 1px solid var(--border-light);
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalIn 0.25s ease;
+    }
+    .edit-modal-box h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px; font-weight: 500;
+      color: var(--brown-dark);
+      margin-bottom: 20px;
+    }
+    .edit-modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+
+    .block-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 14px;
+      align-items: end;
+    }
+    .block-form .field-group { margin-bottom: 0; }
+
+    .blocked-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .blocked-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--booked-bg); color: var(--booked-text);
+      border: 1px solid rgba(143,42,29,0.2);
+      border-radius: var(--radius);
+      padding: 5px 10px; font-size: 11px; font-weight: 500;
+    }
+    .blocked-tag button {
+      background: none; border: none; cursor: pointer;
+      color: var(--booked-text); font-size: 13px; line-height: 1; padding: 0; opacity: 0.7;
+    }
+    .blocked-tag button:hover { opacity: 1; }
+    .block-message { margin-top: 12px; font-size: 12.5px; color: var(--text-muted); min-height: 18px; }
+    .block-message[data-state="error"] { color: var(--error); }
+    .block-message[data-state="success"] { color: var(--success-green); }
+
+    .radio-group { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+    .radio-group label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--text-primary); }
+    .radio-group input[type="radio"] { width: auto; }
+
+    @media (max-width: 700px) {
+      .admin-filter-bar .field-group { max-width: 100%; }
+      .block-form { grid-template-columns: 1fr; }
+      .edit-modal-box { padding: 24px 20px; }
+      .edit-modal-actions { flex-direction: column; }
+    }
+  </style>
 </head>
 <body class="admin-page">
 
-  <div class="page-bg">
-    <div class="cross-pattern"></div>
-  </div>
+  <div class="page-bg"><div class="cross-pattern"></div></div>
 
   <div class="container">
-
     <header class="site-header">
       <div class="logo-mark">✦</div>
       <h1>Admin Dashboard</h1>
@@ -26,29 +172,12 @@
     </header>
 
     <main class="admin-shell">
-      <section class="admin-toolbar" aria-label="Booking filters">
-        <div class="field-group">
-          <label for="adminDate">Booking Date</label>
-          <input type="date" id="adminDate">
-        </div>
 
-        <div class="field-group">
-          <label for="adminStatus">Status</label>
-          <select id="adminStatus">
-            <option value="all" selected>All bookings</option>
-            <option value="pending">Pending approval</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-        </div>
-
-        <button type="button" class="btn-refresh admin-refresh" id="adminRefresh">Refresh</button>
-      </section>
-
-      <section class="admin-summary" aria-label="Booking summary">
+      <!-- Summary -->
+      <section class="admin-summary" aria-label="Booking summary" style="margin-bottom:24px;">
         <article class="summary-card">
           <span class="summary-count" id="totalCount">0</span>
-          <span class="summary-text">Total</span>
+          <span class="summary-text">Total Shown</span>
         </article>
         <article class="summary-card">
           <span class="summary-count" id="pendingCount">0</span>
@@ -64,92 +193,142 @@
         </article>
       </section>
 
-      <section class="recurring-booking-section" aria-labelledby="recurringBookingTitle">
-        <div class="availability-heading">
-          <div>
-            <div class="section-label" id="recurringBookingTitle">Recurring Booking</div>
-            <p class="availability-copy">Reserve the same venue every week across a selected date range.</p>
-          </div>
-          <span class="recurring-count" id="recurringCount">0 occurrences</span>
+      <!-- Recurring Booking (collapsible) -->
+      <div class="collapsible-panel" id="recurringPanel">
+        <button type="button" class="collapsible-trigger" aria-expanded="false" aria-controls="recurringBody" data-panel="recurringPanel">
+          <span class="collapsible-trigger-left">
+            <span class="collapsible-trigger-icon">🔁</span>
+            Recurring Booking
+          </span>
+          <i class="collapsible-chevron">▼</i>
+        </button>
+        <div class="collapsible-body" id="recurringBody">
+          <p style="margin-bottom:18px; color:var(--text-muted); font-size:13px;">Reserve the same venue every week across a selected date range.</p>
+          <form id="recurringBookingForm" class="recurring-form">
+            <div class="field-group recurring-event-field">
+              <label for="recurringEventTitle">Event Title</label>
+              <input type="text" id="recurringEventTitle" placeholder="e.g. Teens Fellowship" required>
+            </div>
+            <div class="field-group">
+              <label for="recurringVenue">Venue</label>
+              <select id="recurringVenue" required>
+                <option value="">Select venue</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="recurringWeekday">Every</label>
+              <select id="recurringWeekday" required>
+                <option value="0">Sunday</option>
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="recurringStartTime">Start Time</label>
+              <input type="time" id="recurringStartTime" required>
+            </div>
+            <div class="field-group">
+              <label for="recurringEndTime">End Time</label>
+              <input type="time" id="recurringEndTime" required>
+            </div>
+            <div class="field-group">
+              <label for="recurringFromDate">From Date</label>
+              <input type="date" id="recurringFromDate" required>
+            </div>
+            <div class="field-group">
+              <label for="recurringUntilDate">Until Date</label>
+              <input type="date" id="recurringUntilDate" required>
+            </div>
+            <div class="field-group">
+              <label for="recurringOrganizer">Organizer</label>
+              <input type="text" id="recurringOrganizer" placeholder="Church Admin">
+            </div>
+            <div class="field-group">
+              <label for="recurringMemberCode">Member Code</label>
+              <input type="text" id="recurringMemberCode" placeholder="ADMIN">
+            </div>
+            <div class="field-group">
+              <label for="recurringPhone">Phone</label>
+              <input type="tel" id="recurringPhone" placeholder="Optional">
+            </div>
+            <button type="submit" class="btn-create-recurring" id="createRecurringButton">Create Recurring Bookings</button>
+          </form>
+          <p class="recurring-message" id="recurringMessage"></p>
+          <div class="recurring-preview" id="recurringPreview"></div>
         </div>
+      </div>
 
-        <form id="recurringBookingForm" class="recurring-form">
-          <div class="field-group recurring-event-field">
-            <label for="recurringEventTitle">Event Title</label>
-            <input type="text" id="recurringEventTitle" placeholder="e.g. Teens Fellowship" required>
+      <!-- Block Dates / Times (collapsible) -->
+      <div class="collapsible-panel" id="blockPanel">
+        <button type="button" class="collapsible-trigger" aria-expanded="false" aria-controls="blockBody" data-panel="blockPanel">
+          <span class="collapsible-trigger-left">
+            <span class="collapsible-trigger-icon">🚫</span>
+            Block Dates &amp; Times
+          </span>
+          <i class="collapsible-chevron">▼</i>
+        </button>
+        <div class="collapsible-body" id="blockBody">
+          <p style="margin-bottom:14px; color:var(--text-muted); font-size:13px;">Prevent public bookings on specific dates or on a recurring weekly basis.</p>
+          <div class="radio-group">
+            <label><input type="radio" name="blockType" id="blockTypeSpecific" value="specific" checked> Specific date</label>
+            <label><input type="radio" name="blockType" id="blockTypeWeekly" value="weekly"> Every week</label>
           </div>
+          <form id="blockForm" class="block-form">
+            <div class="field-group" id="blockDateField">
+              <label for="blockDate">Date</label>
+              <input type="date" id="blockDate">
+            </div>
+            <div class="field-group" id="blockWeekdayField" style="display:none;">
+              <label for="blockWeekday">Day of week</label>
+              <select id="blockWeekday">
+                <option value="0">Sunday</option>
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="blockVenue">Venue <span class="optional">(blank = all)</span></label>
+              <select id="blockVenue">
+                <option value="">All venues</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="blockStartTime">From Time <span class="optional">(blank = full day)</span></label>
+              <input type="time" id="blockStartTime">
+            </div>
+            <div class="field-group">
+              <label for="blockEndTime">To Time</label>
+              <input type="time" id="blockEndTime">
+            </div>
+            <div class="field-group">
+              <label for="blockReason">Reason <span class="optional">(optional)</span></label>
+              <input type="text" id="blockReason" placeholder="e.g. Public holiday">
+            </div>
+            <div class="field-group" style="align-self:flex-end;">
+              <button type="submit" class="btn-create-recurring" style="width:100%; min-height:42px;">Add Block</button>
+            </div>
+          </form>
+          <p class="block-message" id="blockMessage"></p>
+          <div class="blocked-list" id="blockedList"></div>
+        </div>
+      </div>
 
-          <div class="field-group">
-            <label for="recurringVenue">Venue</label>
-            <select id="recurringVenue" required>
-              <option value="">Select venue</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="recurringWeekday">Every</label>
-            <select id="recurringWeekday" required>
-              <option value="0">Sunday</option>
-              <option value="1">Monday</option>
-              <option value="2">Tuesday</option>
-              <option value="3">Wednesday</option>
-              <option value="4">Thursday</option>
-              <option value="5">Friday</option>
-              <option value="6">Saturday</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="recurringStartTime">Start Time</label>
-            <input type="time" id="recurringStartTime" required>
-          </div>
-
-          <div class="field-group">
-            <label for="recurringEndTime">End Time</label>
-            <input type="time" id="recurringEndTime" required>
-          </div>
-
-          <div class="field-group">
-            <label for="recurringFromDate">From Date</label>
-            <input type="date" id="recurringFromDate" required>
-          </div>
-
-          <div class="field-group">
-            <label for="recurringUntilDate">Until Date</label>
-            <input type="date" id="recurringUntilDate" required>
-          </div>
-
-          <div class="field-group">
-            <label for="recurringOrganizer">Organizer</label>
-            <input type="text" id="recurringOrganizer" placeholder="Church Admin">
-          </div>
-
-          <div class="field-group">
-            <label for="recurringMemberCode">Member Code</label>
-            <input type="text" id="recurringMemberCode" placeholder="ADMIN">
-          </div>
-
-          <div class="field-group">
-            <label for="recurringPhone">Phone</label>
-            <input type="tel" id="recurringPhone" placeholder="Optional">
-          </div>
-
-          <button type="submit" class="btn-create-recurring" id="createRecurringButton">
-            Create Recurring Bookings
-          </button>
-        </form>
-
-        <p class="recurring-message" id="recurringMessage"></p>
-        <div class="recurring-preview" id="recurringPreview"></div>
-      </section>
-
-      <section class="availability-section admin-availability" aria-label="Venue availability">
+      <!-- Venue Availability chart (always visible) -->
+      <section class="availability-section admin-availability" aria-label="Venue availability" style="background:#fff; border:1px solid var(--border-light); border-radius:var(--radius-lg); padding:24px 20px; margin-bottom:16px;">
         <div class="availability-heading">
           <div>
             <div class="section-label">Venue Availability</div>
             <p class="availability-copy">View pending and approved bookings across all venues.</p>
           </div>
-          <button type="button" class="btn-refresh" id="adminAvailabilityRefresh">Refresh Chart</button>
+          <button type="button" class="btn-refresh" id="adminAvailabilityRefresh">↻ Refresh Chart</button>
         </div>
 
         <div class="field-row two-col availability-controls">
@@ -167,36 +346,134 @@
           </div>
         </div>
 
-        <p class="availability-message" id="adminAvailabilityMessage">Loading availability...</p>
+        <p class="availability-message" id="adminAvailabilityMessage">Loading availability…</p>
         <div class="availability-chart-wrap">
           <table class="availability-chart" id="adminAvailabilityChart" aria-label="Admin venue availability chart"></table>
         </div>
       </section>
 
-      <p class="admin-message" id="adminMessage">Loading bookings...</p>
+      <!-- Bookings table -->
+      <section aria-label="Bookings table">
+        <div class="section-label" style="margin-bottom:14px;">Bookings</div>
 
-      <section class="admin-table-wrap" aria-label="Bookings table">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th scope="col">Reference</th>
-              <th scope="col">Event</th>
-              <th scope="col">Requester</th>
-              <th scope="col">Venue</th>
-              <th scope="col">Schedule</th>
-              <th scope="col">Status</th>
-              <th scope="col">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="adminBookingRows">
-            <tr>
-              <td colspan="7" class="empty-cell">Loading bookings...</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="admin-filter-bar">
+          <div class="field-group">
+            <label for="filterFromDate">From Date</label>
+            <input type="date" id="filterFromDate">
+          </div>
+          <div class="field-group">
+            <label for="filterToDate">To Date</label>
+            <input type="date" id="filterToDate">
+          </div>
+          <div class="field-group">
+            <label for="filterVenue">Venue</label>
+            <select id="filterVenue">
+              <option value="">All venues</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="filterStatus">Status</label>
+            <select id="filterStatus">
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="filterSearch">Search</label>
+            <input type="text" id="filterSearch" placeholder="Name, event, member code…">
+          </div>
+          <div class="field-group">
+            <label for="filterFuture">Time Window</label>
+            <select id="filterFuture">
+              <option value="future" selected>Future bookings only</option>
+              <option value="all">All bookings</option>
+              <option value="past">Past bookings only</option>
+            </select>
+          </div>
+          <button type="button" class="btn-refresh" id="adminRefresh">Refresh</button>
+          <button type="button" class="btn-reset-filters" id="resetFilters">Reset</button>
+        </div>
+
+        <p class="admin-message" id="adminMessage">Loading bookings…</p>
+
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th scope="col" data-sort="ref">Reference <span class="sort-icon" data-col="ref">↕</span></th>
+                <th scope="col" data-sort="event">Event <span class="sort-icon" data-col="event">↕</span></th>
+                <th scope="col" data-sort="name">Requester <span class="sort-icon" data-col="name">↕</span></th>
+                <th scope="col" data-sort="venue">Venue <span class="sort-icon" data-col="venue">↕</span></th>
+                <th scope="col" data-sort="start">Schedule <span class="sort-icon" data-col="start">↕</span></th>
+                <th scope="col" data-sort="status">Status <span class="sort-icon" data-col="status">↕</span></th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminBookingRows">
+              <tr><td colspan="7" class="empty-cell">Loading bookings…</td></tr>
+            </tbody>
+          </table>
+        </div>
       </section>
-    </main>
 
+    </main>
+  </div>
+
+  <!-- Edit Booking Modal -->
+  <div class="edit-modal-overlay" id="editModal" hidden aria-modal="true" role="dialog" aria-labelledby="editModalTitle">
+    <div class="edit-modal-box">
+      <h2 id="editModalTitle">Edit Booking</h2>
+      <input type="hidden" id="editRef">
+      <div class="field-row two-col">
+        <div class="field-group">
+          <label for="editMemberCode">Member Code</label>
+          <input type="text" id="editMemberCode">
+        </div>
+        <div class="field-group">
+          <label for="editName">Full Name</label>
+          <input type="text" id="editName">
+        </div>
+      </div>
+      <div class="field-row two-col">
+        <div class="field-group">
+          <label for="editEmail">Email</label>
+          <input type="email" id="editEmail">
+        </div>
+        <div class="field-group">
+          <label for="editPhone">Phone</label>
+          <input type="tel" id="editPhone">
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="editEventTitle">Event Title</label>
+        <input type="text" id="editEventTitle">
+      </div>
+      <div class="field-row two-col">
+        <div class="field-group">
+          <label for="editStart">Start Date &amp; Time</label>
+          <input type="datetime-local" id="editStart">
+        </div>
+        <div class="field-group">
+          <label for="editDuration">Duration (hours)</label>
+          <input type="number" id="editDuration" min="0.5" max="12" step="0.5">
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="editLocation">Venue</label>
+        <select id="editLocation"></select>
+      </div>
+      <div class="field-group">
+        <label for="editNotes">Notes <span class="optional">(optional)</span></label>
+        <textarea id="editNotes" style="min-height:64px;"></textarea>
+      </div>
+      <div class="edit-modal-actions">
+        <button type="button" class="btn-confirm" id="editSaveBtn">Save Changes</button>
+        <button type="button" class="btn-cancel" id="editCancelBtn">Cancel</button>
+      </div>
+      <p style="font-size:11.5px; color:var(--text-muted); margin-top:12px;" id="editMessage"></p>
+    </div>
   </div>
 
   <script src="admin.js"></script>
