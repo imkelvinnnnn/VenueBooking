@@ -2,7 +2,7 @@
 /* Venue Desk admin SPA — requires the matching Code.gs deployment.
  * Keep this URL synced with your CURRENT Apps Script Web App deployment.
  */
-const API_URL = 'https://script.google.com/macros/s/AKfycbys4YZOVsEX7kEz0RFaQe90h4ye3fpZEkFWgsGzqgbL9CERoLbdKhEOE-wLez76hC68/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycby12gKfymyAJPgXuZA6Z--R1SdZxAOlhZzOsAowZdLuQGfRU1RFhwJP83E2ZUqrqmVmxg/exec';
 const TOKEN_KEY = 'venueDeskAdminToken';
 const DEFAULT_VENUES = ['Main Hall', 'Chapel', 'Fellowship Room', 'Prayer Room', 'Youth Hall'];
 const el = id => document.getElementById(id);
