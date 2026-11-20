@@ -9,13 +9,13 @@
    • Redirects to success.html on confirmed booking
    ────────────────────────────────────────────── */
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbys4YZOVsEX7kEz0RFaQe90h4ye3fpZEkFWgsGzqgbL9CERoLbdKhEOE-wLez76hC68/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycby12gKfymyAJPgXuZA6Z--R1SdZxAOlhZzOsAowZdLuQGfRU1RFhwJP83E2ZUqrqmVmxg/exec';
 const DEFAULT_VENUES = ['Main Hall', 'Chapel', 'Fellowship Room', 'Prayer Room', 'Youth Hall'];
 const CHART_START_HOUR = 9;
-const CHART_END_HOUR   = 22;
-const SLOT_MINUTES     = 60;
+const CHART_END_HOUR = 22;
+const SLOT_MINUTES = 60;
 
-let currentVenues   = [...DEFAULT_VENUES];
+let currentVenues = [...DEFAULT_VENUES];
 let currentBookings = [];
 let venueBlocks = JSON.parse(localStorage.getItem('adminBlockedRules') || '[]')
   .filter(r => r.type === 'specific' || r.type === 'weekly');  // loaded sync from localStorage; refreshed async from server
@@ -32,7 +32,7 @@ async function loadVenueBlocks() {
     .filter(r => r.type === 'specific' || r.type === 'weekly');
 
   try {
-    const res    = await fetch(API_URL + '?action=getVenueBlocks');
+    const res = await fetch(API_URL + '?action=getVenueBlocks');
     const server = await res.json();
     if (Array.isArray(server)) {
       const serverIds = new Set(server.map(r => r.id).filter(Boolean));
@@ -66,7 +66,7 @@ function venueKey(v) {
  */
 function isBlockedSlot(dateValue, hour, vkey) {
   const slotStart = hour * 60;
-  const slotEnd   = slotStart + 60;
+  const slotEnd = slotStart + 60;
 
   for (const rule of venueBlocks) {
     // 1. Venue match (empty = all venues)
@@ -87,7 +87,7 @@ function isBlockedSlot(dateValue, hour, vkey) {
     //    If startTime/endTime are present (non-empty), only block slots that overlap.
     //    If absent (full-day block), every slot on that date is blocked.
     const hasTime = rule.startTime && rule.startTime.trim() &&
-                    rule.endTime   && rule.endTime.trim();
+      rule.endTime && rule.endTime.trim();
     if (hasTime) {
       const rs = timeToMins(rule.startTime);
       const re = timeToMins(rule.endTime);
@@ -105,12 +105,12 @@ function isBlockedSlot(dateValue, hour, vkey) {
  * falls within a blocked rule.
  */
 function isWindowBlocked(start, end, venue) {
-  const vkey      = venueKey(venue);
+  const vkey = venueKey(venue);
   const dateValue = localDateValue(start);
 
   // Iterate every hour slot that the window touches
   const startHour = start.getHours();
-  const endHour   = end.getMinutes() > 0 ? end.getHours() : end.getHours() - 1;
+  const endHour = end.getMinutes() > 0 ? end.getHours() : end.getHours() - 1;
 
   for (let h = startHour; h <= endHour; h++) {
     if (isBlockedSlot(dateValue, h, vkey)) return true;
@@ -132,7 +132,7 @@ async function loadVenues() {
   if (!select) return currentVenues;
 
   try {
-    const res    = await fetch(API_URL + '?action=getVenues');
+    const res = await fetch(API_URL + '?action=getVenues');
     const venues = normalizeVenueList(await res.json());
     setVenueOptions(venues.length ? venues : DEFAULT_VENUES);
   } catch {
@@ -176,8 +176,8 @@ loadVenues().then(() => loadVenueBlocks()).then(() => loadAvailability());
 /* ════════════════════════════════════════════
    Availability chart
 ════════════════════════════════════════════ */
-const availabilityDate    = document.getElementById('availabilityDate');
-const availabilityChart   = document.getElementById('availabilityChart');
+const availabilityDate = document.getElementById('availabilityDate');
+const availabilityChart = document.getElementById('availabilityChart');
 const availabilityMessage = document.getElementById('availabilityMessage');
 const refreshAvailability = document.getElementById('refreshAvailability');
 
@@ -204,15 +204,15 @@ function readBookingField(booking, names) {
 
 function parseBookingStart(booking) {
   const start = readBookingField(booking, ['start', 'startTime', 'dateTime', 'bookingStart']);
-  const date  = readBookingField(booking, ['date', 'bookingDate']);
-  const time  = readBookingField(booking, ['time', 'from', 'startHour']);
-  const raw   = start || (date && time ? `${date}T${time}` : date);
+  const date = readBookingField(booking, ['date', 'bookingDate']);
+  const time = readBookingField(booking, ['time', 'from', 'startHour']);
+  const raw = start || (date && time ? `${date}T${time}` : date);
   const parsed = raw ? new Date(raw) : null;
   return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
 }
 
 function parseBookingEnd(booking, start) {
-  const end       = readBookingField(booking, ['end', 'endTime', 'bookingEnd']);
+  const end = readBookingField(booking, ['end', 'endTime', 'bookingEnd']);
   const parsedEnd = end ? new Date(end) : null;
   if (parsedEnd && !Number.isNaN(parsedEnd.getTime())) return parsedEnd;
   const duration = parseFloat(readBookingField(booking, ['duration', 'durationHours', 'hours']) || 1);
@@ -233,25 +233,25 @@ function normalizeBookings(data) {
 
     return {
       start,
-      end:    parseBookingEnd(booking, start),
-      venue:  String(readBookingField(booking, ['location', 'venue', 'room']) || '').trim(),
-      title:  String(readBookingField(booking, ['eventTitle', 'title', 'event']) || 'Reserved').trim(),
+      end: parseBookingEnd(booking, start),
+      venue: String(readBookingField(booking, ['location', 'venue', 'room']) || '').trim(),
+      title: String(readBookingField(booking, ['eventTitle', 'title', 'event']) || 'Reserved').trim(),
       status: rawStatus.includes('pending') ? 'pending' : 'booked'
     };
   }).filter(Boolean);
 }
 
 async function fetchBookingsForDate(dateValue) {
-  const url  = `${API_URL}?action=getBookings&date=${encodeURIComponent(dateValue)}`;
-  const res  = await fetch(url);
+  const url = `${API_URL}?action=getBookings&date=${encodeURIComponent(dateValue)}`;
+  const res = await fetch(url);
   const data = await res.json();
   return normalizeBookings(data).filter(booking => localDateValue(booking.start) === dateValue);
 }
 
 function getRequestedWindow() {
   const startValue = document.getElementById('start')?.value;
-  const venue      = document.getElementById('location')?.value;
-  const duration   = parseFloat(document.getElementById('duration')?.value || '');
+  const venue = document.getElementById('location')?.value;
+  const duration = parseFloat(document.getElementById('duration')?.value || '');
 
   if (!startValue || !venue || !Number.isFinite(duration)) return null;
 
@@ -285,10 +285,10 @@ function escapeHtml(value) {
 function renderAvailabilityChart() {
   if (!availabilityChart || !availabilityDate) return;
 
-  const dateValue     = availabilityDate.value || localDateValue(new Date());
-  const requested     = getRequestedWindow();
+  const dateValue = availabilityDate.value || localDateValue(new Date());
+  const requested = getRequestedWindow();
   const requestedDate = requested ? localDateValue(requested.start) : '';
-  const chartDay      = new Date(`${dateValue}T00:00:00`);
+  const chartDay = new Date(`${dateValue}T00:00:00`);
 
   const head = `
     <thead>
@@ -327,16 +327,16 @@ function renderAvailabilityChart() {
 
       if (booking) {
         // Public form never reveals pending vs booked — both show as Unavailable
-        state     = 'booked';
-        label     = 'Unavailable';
+        state = 'booked';
+        label = 'Unavailable';
         titleText = 'Unavailable';
       } else if (blockReason) {
-        state     = 'booked';
-        label     = 'Unavailable';
+        state = 'booked';
+        label = 'Unavailable';
         titleText = blockReason !== 'Blocked' ? `Unavailable: ${blockReason}` : 'Unavailable';
       } else {
-        state     = 'open';
-        label     = 'Available';
+        state = 'open';
+        label = 'Available';
         titleText = 'Available';
       }
 
@@ -420,7 +420,7 @@ const validators = {
   start(val) {
     if (!val) return 'Please select a date and start time.';
     const chosen = new Date(val);
-    const now    = new Date();
+    const now = new Date();
     if (chosen <= now) return 'Start time must be in the future.';
     if ((chosen - now) / 3600000 < 1) return 'Booking must be at least 1 hour from now.';
     if (chosen.getHours() < 9) return 'Bookings can only start from 9:00 AM.';
@@ -437,7 +437,7 @@ const validators = {
     const startVal = document.getElementById('start')?.value;
     if (startVal) {
       const startDt = new Date(startVal);
-      const endDt   = new Date(startDt.getTime() + n * 3600000);
+      const endDt = new Date(startDt.getTime() + n * 3600000);
       // End time must be <= 23:00 on the same day (no crossing midnight)
       const endH = endDt.getHours(), endM = endDt.getMinutes();
       if (endDt.toDateString() !== startDt.toDateString() || endH > 23 || (endH === 23 && endM > 0)) {
@@ -456,7 +456,7 @@ const validators = {
    DOM helpers
 ════════════════════════════════════════════ */
 function showError(fieldId, message) {
-  const el    = document.getElementById(fieldId);
+  const el = document.getElementById(fieldId);
   const errEl = document.getElementById(fieldId + 'Error');
   if (message) {
     el.classList.add('invalid');
@@ -488,8 +488,8 @@ const touched = new Set();
 ['memberCode', 'name', 'email', 'phone', 'eventTitle', 'start', 'duration', 'location'].forEach(id => {
   const el = document.getElementById(id);
   if (!el) return;
-  el.addEventListener('blur',   () => { touched.add(id); validateField(id); });
-  el.addEventListener('input',  () => { if (touched.has(id)) validateField(id); });
+  el.addEventListener('blur', () => { touched.add(id); validateField(id); });
+  el.addEventListener('input', () => { if (touched.has(id)) validateField(id); });
   el.addEventListener('change', () => { touched.add(id); validateField(id); });
 });
 
@@ -515,15 +515,15 @@ document.getElementById('start')?.addEventListener('change', () => {
   }
 });
 
-document.getElementById('duration')?.addEventListener('input',  renderAvailabilityChart);
+document.getElementById('duration')?.addEventListener('input', renderAvailabilityChart);
 document.getElementById('location')?.addEventListener('change', renderAvailabilityChart);
 
 /* ════════════════════════════════════════════
    Modal
 ════════════════════════════════════════════ */
-const modal      = document.getElementById('confirmModal');
+const modal = document.getElementById('confirmModal');
 const confirmBtn = document.getElementById('confirmBtn');
-const cancelBtn  = document.getElementById('cancelBtn');
+const cancelBtn = document.getElementById('cancelBtn');
 
 let pendingBooking = null;
 
@@ -531,20 +531,20 @@ function openModal(booking) {
   pendingBooking = booking;
 
   const startDt = new Date(booking.start);
-  const endDt   = new Date(startDt.getTime() + booking.duration * 3600000);
+  const endDt = new Date(startDt.getTime() + booking.duration * 3600000);
   const fmt = dt => dt.toLocaleString('en-MY', {
     weekday: 'short', year: 'numeric', month: 'short',
     day: 'numeric', hour: '2-digit', minute: '2-digit'
   });
 
   const rows = [
-    ['Member',   booking.memberCode + ' — ' + booking.name],
-    ['Email',    booking.email],
-    ['Phone',    booking.phone],
-    ['Event',    booking.eventTitle],
-    ['Venue',    booking.location],
-    ['Start',    fmt(startDt)],
-    ['End',      fmt(endDt)],
+    ['Member', booking.memberCode + ' — ' + booking.name],
+    ['Email', booking.email],
+    ['Phone', booking.phone],
+    ['Event', booking.eventTitle],
+    ['Venue', booking.location],
+    ['Start', fmt(startDt)],
+    ['End', fmt(endDt)],
     ['Duration', booking.duration + (booking.duration === 1 ? ' hour' : ' hours')],
     ...(booking.notes ? [['Notes', booking.notes]] : [])
   ];
@@ -577,24 +577,24 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hid
 confirmBtn.addEventListener('click', async () => {
   if (!pendingBooking) return;
 
-  confirmBtn.disabled    = true;
+  confirmBtn.disabled = true;
   confirmBtn.textContent = 'Submitting…';
 
   try {
     const payload = {
-      action:     'createBooking',
+      action: 'createBooking',
       memberCode: pendingBooking.memberCode,
-      name:       pendingBooking.name,
-      email:      pendingBooking.email,
-      phone:      pendingBooking.phone,
+      name: pendingBooking.name,
+      email: pendingBooking.email,
+      phone: pendingBooking.phone,
       eventTitle: pendingBooking.eventTitle,
-      start:      pendingBooking.start,
-      duration:   pendingBooking.duration,
-      location:   pendingBooking.location,
-      notes:      pendingBooking.notes || ''
+      start: pendingBooking.start,
+      duration: pendingBooking.duration,
+      location: pendingBooking.location,
+      notes: pendingBooking.notes || ''
     };
 
-    const res    = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
     const result = await res.json();
 
     if (!result.success) {
@@ -609,7 +609,7 @@ confirmBtn.addEventListener('click', async () => {
 
     const confirmedData = {
       ...pendingBooking,
-      ref:      result.ref || ('BK-' + Date.now().toString(36).toUpperCase()),
+      ref: result.ref || ('BK-' + Date.now().toString(36).toUpperCase()),
       bookedAt: new Date().toISOString()
     };
 
@@ -622,7 +622,7 @@ confirmBtn.addEventListener('click', async () => {
     alert('A network error occurred. Please check your connection and try again.');
     console.error('Booking error:', err);
   } finally {
-    confirmBtn.disabled    = false;
+    confirmBtn.disabled = false;
     confirmBtn.textContent = 'Confirm Booking';
   }
 });
@@ -642,11 +642,11 @@ document.getElementById('bookingForm').addEventListener('submit', e => {
     return;
   }
 
-  const startVal  = document.getElementById('start').value;
-  const duration  = parseFloat(document.getElementById('duration').value);
-  const location  = document.getElementById('location').value;
+  const startVal = document.getElementById('start').value;
+  const duration = parseFloat(document.getElementById('duration').value);
+  const location = document.getElementById('location').value;
   const startDate = new Date(startVal);
-  const endDate   = new Date(startDate.getTime() + duration * 3600000);
+  const endDate = new Date(startDate.getTime() + duration * 3600000);
 
   // ── Client-side block check ──
   if (isWindowBlocked(startDate, endDate, location)) {
@@ -660,14 +660,14 @@ document.getElementById('bookingForm').addEventListener('submit', e => {
 
   const booking = {
     memberCode: document.getElementById('memberCode').value.trim().toUpperCase(),
-    name:       document.getElementById('name').value.trim(),
-    email:      document.getElementById('email').value.trim().toLowerCase(),
-    phone:      document.getElementById('phone').value.trim(),
+    name: document.getElementById('name').value.trim(),
+    email: document.getElementById('email').value.trim().toLowerCase(),
+    phone: document.getElementById('phone').value.trim(),
     eventTitle: document.getElementById('eventTitle').value.trim(),
-    start:      startVal,
+    start: startVal,
     duration,
     location,
-    notes:      document.getElementById('notes').value.trim()
+    notes: document.getElementById('notes').value.trim()
   };
 
   openModal(booking);
@@ -690,7 +690,7 @@ document.getElementById('bookingForm').addEventListener('submit', e => {
   const minDt = earliest > now ? earliest : now;
   input.min = new Date(minDt - minDt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   if (availabilityDate) {
-    availabilityDate.min   = localDateValue(new Date());
+    availabilityDate.min = localDateValue(new Date());
     availabilityDate.value = availabilityDate.value || localDateValue(new Date());
   }
 })();
