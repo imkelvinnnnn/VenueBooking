@@ -1219,25 +1219,13 @@ function whatsappMessage(
 
     return [
 
-      name
-        ? `Hi ${name}, Peace be with you. This is the notification for your confirmed venue booking. `
-        : 'Greetings in Christ.',
-
-      '',
-
-      introduction,
-
+      'Hi ${name}, Peace be with you. This is the notification for your confirmed venue booking. ',
       'If there are any changes, please notify the Administration Department at 019-262 8331 or the Event and Venue Coordinator, Sis. Kai Yee at 012-522 2528.',
-
       '',
-
       '_Note: Before leaving, please switch off all electrical equipment and keep the venue clean and tidy. Let’s work together to care for God’s church. Thank you._',
 
       '',
-
-      pending
-        ? '*Booking Request Details*'
-        : '*Booking Details*',
+      '*Booking Details*',
 
       `Event: ${title}`,
 
