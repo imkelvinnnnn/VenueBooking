@@ -1093,13 +1093,197 @@ function normalizeWhatsAppPhone(value) {
     : '';
 }
 
-function whatsappMessage(b, updated = false) {
+/* ==========================================
+   WhatsApp language and message formatting
+========================================== */
+
+let whatsappContext = null;
+
+
+/* Decode HTML entities for plain-text messages */
+
+function decodeWhatsAppText(value) {
+  const entities = {
+    amp: '&',
+    lt: '<',
+    gt: '>',
+    quot: '"',
+    apos: "'",
+    nbsp: ' '
+  };
+
+  return String(value ?? '').replace(
+    /&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/gi,
+    (match, entity) => {
+
+      const key = entity.toLowerCase();
+
+      if (key.startsWith('#')) {
+
+        const code = key.startsWith('#x')
+          ? parseInt(key.slice(2), 16)
+          : parseInt(key.slice(1), 10);
+
+        if (
+          Number.isInteger(code) &&
+          code > 0 &&
+          code <= 0x10FFFF &&
+          !(code >= 0xD800 && code <= 0xDFFF)
+        ) {
+          return String.fromCodePoint(code);
+        }
+
+        return match;
+      }
+
+      return entities[key] ?? match;
+    }
+  );
+}
+
+
+/* Format date according to selected language */
+
+function formatWhatsAppDate(date, language = 'zh') {
+
+  const d = date instanceof Date
+    ? date
+    : date
+      ? new Date(date)
+      : null;
+
+  if (!d || isNaN(d.getTime())) {
+    return language === 'zh'
+      ? '未指定'
+      : 'Not specified';
+  }
+
+  return d.toLocaleString(
+    language === 'zh' ? 'zh-CN' : 'en-MY',
+    {
+      timeZone: 'Asia/Kuala_Lumpur',
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }
+  );
+}
+
+
+/* Generate WhatsApp message */
+
+function whatsappMessage(
+  b,
+  updated = false,
+  language = 'zh'
+) {
+
   const pending = b.status === 'pending';
 
-  return [
-    `${b.name || '您好'}，平安。`,
+  const name = decodeWhatsAppText(b.name).trim();
 
-    '这个是您已预定的场地通知，若有任何更改，请再通知行政部电话号码019-262 8331，或活动与场地负责人-朱凯仪姐妹012-522 2528，谢谢。',
+  const title = decodeWhatsAppText(b.title);
+
+  const venue = decodeWhatsAppText(b.venue);
+
+  const notes = decodeWhatsAppText(b.notes).trim();
+
+  const start = formatWhatsAppDate(
+    b.start,
+    language
+  );
+
+  const end = formatWhatsAppDate(
+    b.end,
+    language
+  );
+
+
+  /* ==========================================
+     English message
+  ========================================== */
+
+  if (language === 'en') {
+
+    const introduction = updated
+      ? (
+        pending
+          ? 'The notes for your venue booking request have been updated. Your booking is still pending approval.'
+          : 'The notes for your confirmed venue booking have been updated. Please refer to the latest booking information below.'
+      )
+      : 'Your venue booking has been confirmed.';
+
+    return [
+
+      name
+        ? `Hi ${name}, Peace be with you. This is the notification for your confirmed venue booking. `
+        : 'Greetings in Christ.',
+
+      '',
+
+      introduction,
+
+      'If there are any changes, please notify the Administration Department at 019-262 8331 or the Event and Venue Coordinator, Sis. Kai Yee at 012-522 2528.',
+
+      '',
+
+      '_Note: Before leaving, please switch off all electrical equipment and keep the venue clean and tidy. Let’s work together to care for God’s church. Thank you._',
+
+      '',
+
+      pending
+        ? '*Booking Request Details*'
+        : '*Booking Details*',
+
+      `Event: ${title}`,
+
+      `Venue: ${venue}`,
+
+      `Start Time: ${start}`,
+
+      `End Time: ${end}`,
+
+      '',
+
+      '*Notes*',
+
+      notes || 'None',
+
+      '',
+
+      'Thank you.'
+
+    ].join('\n');
+  }
+
+
+  /* ==========================================
+     Mandarin message
+  ========================================== */
+
+  const introduction = updated
+    ? (
+      pending
+        ? '您的场地申请备注已更新，目前申请仍在等待审核，请查阅以下最新资料。'
+        : '您的场地预订备注已更新，请查阅以下最新的预订资料。'
+    )
+    : '这个是您已预定的场地通知。';
+
+  return [
+
+    name
+      ? `${name}，平安。`
+      : '您好，平安。',
+
+    '',
+
+    introduction,
+
+    '若有任何更改，请再通知行政部电话号码019-262 8331，或活动与场地负责人-朱凯仪姐妹012-522 2528，谢谢。',
 
     '',
 
@@ -1107,29 +1291,40 @@ function whatsappMessage(b, updated = false) {
 
     '',
 
-    pending ? '*申请信息*' : '*预定信息*',
+    pending
+      ? '*申请信息*'
+      : '*预定信息*',
 
-    `活动: ${b.title}`,
+    `活动: ${title}`,
 
-    // Includes all selected venues.
-    `地点: ${b.venue}`,
+    `地点: ${venue}`,
 
-    `开始时间: ${formatDate(b.start)}`,
-    `结束时间: ${formatDate(b.end)}`,
+    `开始时间: ${start}`,
+
+    `结束时间: ${end}`,
 
     '',
 
     '*备注*',
 
-    String(b.notes || '').trim() || '无',
+    notes || '无',
 
     '',
+
     '谢谢'
 
   ].join('\n');
 }
 
-function buildWhatsAppUrl(b, updated = false) {
+
+/* Build WhatsApp URL */
+
+function buildWhatsAppUrl(
+  b,
+  updated = false,
+  language = 'zh'
+) {
+
   const phone = normalizeWhatsAppPhone(b.phone);
 
   const allowed =
@@ -1140,62 +1335,146 @@ function buildWhatsAppUrl(b, updated = false) {
     return '';
   }
 
-  return `https://wa.me/${phone}?text=${encodeURIComponent(
-    whatsappMessage(b, updated)
-  )
+  const message = whatsappMessage(
+    b,
+    updated,
+    language
+  );
+
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)
     }`;
 }
 
-function openWhatsAppModal(b, updated = false) {
+
+/* Get selected message language */
+
+function getWhatsAppLanguage() {
+
+  return document.querySelector(
+    'input[name="whatsappLanguage"]:checked'
+  )?.value || 'zh';
+
+}
+
+
+/* Refresh preview and WhatsApp URL */
+
+function refreshWhatsAppModal() {
+
+  if (!whatsappContext) return;
+
+  const {
+    booking: b,
+    updated
+  } = whatsappContext;
+
+  const language = getWhatsAppLanguage();
+
+  const message = whatsappMessage(
+    b,
+    updated,
+    language
+  );
+
+  const url = buildWhatsAppUrl(
+    b,
+    updated,
+    language
+  );
+
+  setText(
+    'whatsappModalMessage',
+    message
+  );
+
+  const openButton = el('whatsappOpenBtn');
+
+  openButton.hidden = !url;
+
+  if (url) {
+
+    openButton.href = url;
+
+  } else {
+
+    openButton.removeAttribute('href');
+
+  }
+
+  setText(
+    'whatsappModalNotice',
+
+    url
+      ? 'The message is prepared. Press Send in WhatsApp manually.'
+      : 'No valid phone number. Edit this booking to add one.',
+
+    url ? 'ready' : 'error'
+  );
+}
+
+
+/* Open WhatsApp preview popup */
+
+function openWhatsAppModal(
+  b,
+  updated = false
+) {
+
   const allowed =
     b.status === 'approved' ||
     (updated && b.status === 'pending');
 
   if (!allowed) return;
 
-  const phone = normalizeWhatsAppPhone(b.phone);
+  const phone = normalizeWhatsAppPhone(
+    b.phone
+  );
 
-  const url = buildWhatsAppUrl(b, updated);
+  whatsappContext = {
+    booking: b,
+    updated
+  };
+
+  // Default language is Mandarin.
+  el('whatsappLangZh').checked = true;
 
   setText(
     'whatsappModalTitle',
+
     updated
       ? 'Booking notes updated'
       : 'Booking approved'
   );
 
+  const name = decodeWhatsAppText(b.name);
+
   setText(
     'whatsappModalRecipient',
-    `Recipient: ${b.name || 'Organizer'} (${phone
+
+    `Recipient: ${name || 'Organizer'} (${phone
       ? '+' + phone
       : 'No valid phone number'
     })`
   );
 
-  setText(
-    'whatsappModalMessage',
-    whatsappMessage(b, updated)
-  );
-
-  el('whatsappOpenBtn').hidden = !url;
-
-  if (url) {
-    el('whatsappOpenBtn').href = url;
-
-  } else {
-    el('whatsappOpenBtn').removeAttribute('href');
-  }
-
-  setText(
-    'whatsappModalNotice',
-    url
-      ? 'The message is prepared. Press Send in WhatsApp manually.'
-      : 'No valid phone number. Edit this booking to add one.',
-    url ? 'ready' : 'error'
-  );
+  refreshWhatsAppModal();
 
   openModal('whatsappModal');
 }
+
+
+/* Update message whenever language changes */
+
+document.querySelectorAll(
+  'input[name="whatsappLanguage"]'
+).forEach(input => {
+
+  input.addEventListener(
+    'change',
+    refreshWhatsAppModal
+  );
+
+});
 
 /* ==========================================
    Modal helpers
