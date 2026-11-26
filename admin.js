@@ -460,48 +460,421 @@ el('recurringBookingForm').addEventListener('submit', async e => {
 });
 
 /* Blocks */
-el('blockType').addEventListener('change', () => {
-  const weekly = val('blockType') === 'weekly'; el('blockDateField').hidden = weekly; el('blockWeekdayField').hidden = !weekly;
-});
+
+/* Blocks */
+
+function validBlockDate(date) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+  if (date < '2000-01-01') return false;
+
+  const parsed = new Date(date + 'T00:00:00Z');
+
+  return !isNaN(parsed.getTime()) &&
+    parsed.toISOString().slice(0, 10) === date;
+}
+
+function updateBlockFields() {
+  const weekly = val('blockType') === 'weekly';
+
+  // Specific date fields
+  el('blockDateField').hidden = weekly;
+  el('blockDate').required = !weekly;
+  el('blockDate').disabled = weekly;
+  el('blockDate').min = '2000-01-01';
+
+  // Weekly fields
+  el('blockWeekdayField').hidden = !weekly;
+  el('blockFromDateField').hidden = !weekly;
+  el('blockUntilDateField').hidden = !weekly;
+  el('blockPreviewField').hidden = !weekly;
+
+  el('blockWeekday').disabled = !weekly;
+  el('blockFromDate').disabled = !weekly;
+  el('blockUntilDate').disabled = !weekly;
+
+  el('blockWeekday').required = weekly;
+  el('blockFromDate').required = weekly;
+  el('blockUntilDate').required = weekly;
+
+  renderBlockPreview();
+}
+
+function getBlockOccurrences() {
+  const from = val('blockFromDate');
+  const until = val('blockUntilDate');
+  const weekday = Number(val('blockWeekday'));
+
+  if (
+    !validBlockDate(from) ||
+    !validBlockDate(until) ||
+    from > until
+  ) {
+    return { count: 0, dates: [] };
+  }
+
+  const first = new Date(from + 'T00:00:00Z');
+  const last = new Date(until + 'T00:00:00Z');
+
+  // Find the first matching weekday.
+  first.setUTCDate(
+    first.getUTCDate() +
+    (weekday - first.getUTCDay() + 7) % 7
+  );
+
+  if (first > last) {
+    return { count: 0, dates: [] };
+  }
+
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+
+  const count = Math.floor(
+    (last.getTime() - first.getTime()) / weekMs
+  ) + 1;
+
+  const dates = [];
+
+  // Only display the first eight occurrences.
+  for (let i = 0; i < Math.min(count, 8); i++) {
+    dates.push(
+      new Date(first.getTime() + i * weekMs)
+    );
+  }
+
+  return { count, dates };
+}
+
+function renderBlockPreview() {
+  if (val('blockType') !== 'weekly') return;
+
+  const from = val('blockFromDate');
+
+  el('blockUntilDate').min =
+    from || '2000-01-01';
+
+  const { count, dates } = getBlockOccurrences();
+
+  setText(
+    'blockCount',
+    `${count} occurrence${count === 1 ? '' : 's'}`
+  );
+
+  el('blockPreview').innerHTML = dates.map(date => `
+        <span>
+            ${htmlEscape(
+    date.toLocaleDateString('en-MY', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC'
+    })
+  )}
+        </span>
+    `).join('') + (
+      count > 8
+        ? `<span>+${count - 8} more</span>`
+        : ''
+    );
+}
+
+el('blockType').addEventListener(
+  'change',
+  updateBlockFields
+);
+
+for (const id of [
+  'blockFromDate',
+  'blockUntilDate',
+  'blockWeekday'
+]) {
+  el(id).addEventListener(
+    'change',
+    renderBlockPreview
+  );
+
+  el(id).addEventListener(
+    'input',
+    renderBlockPreview
+  );
+}
+
 function renderBlockedList() {
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  if (!blockedRules.length) { el('blockedList').innerHTML = '<p class="muted">No venue blocks added.</p>'; return; }
+  const days = [
+    'Sunday', 'Monday', 'Tuesday',
+    'Wednesday', 'Thursday', 'Friday',
+    'Saturday'
+  ];
+
+  if (!blockedRules.length) {
+    el('blockedList').innerHTML =
+      '<p class="muted">No venue blocks added.</p>';
+
+    return;
+  }
+
   el('blockedList').innerHTML = blockedRules.map(b => {
-    const when = b.type === 'weekly' ? 'Every ' + days[b.weekday] : b.date;
-    return `<div class="block-tag"><span><strong>${htmlEscape(when)}</strong> · ${htmlEscape(b.venue || 'All venues')} · ${htmlEscape(b.startTime && b.endTime ? b.startTime + '–' + b.endTime : 'All day')}${b.reason ? ' · ' + htmlEscape(b.reason) : ''}</span><button type="button" class="icon-button" data-delete-block="${htmlEscape(b.id)}" aria-label="Remove block">✕</button></div>`;
+    const weekly = b.type === 'weekly';
+
+    const when = weekly
+      ? 'Every ' + days[b.weekday]
+      : b.date;
+
+    const dateRange = weekly
+      ? (b.fromDate || 'No start date') +
+      ' → ' +
+      (b.untilDate || 'No end date')
+      : '';
+
+    const timeRange = b.startTime && b.endTime
+      ? b.startTime + '–' + b.endTime
+      : 'All day';
+
+    return `
+            <div class="block-tag">
+                <span>
+                    <strong>${htmlEscape(when)}</strong>
+                    · ${htmlEscape(b.venue || 'All venues')}
+                    · ${htmlEscape(timeRange)}
+
+                    ${dateRange
+        ? `<br>${htmlEscape(dateRange)}`
+        : ''}
+
+                    ${b.reason
+        ? `<br>${htmlEscape(b.reason)}`
+        : ''}
+                </span>
+
+                <button
+                    type="button"
+                    class="icon-button"
+                    data-delete-block="${htmlEscape(b.id)}"
+                    aria-label="Remove block"
+                >✕</button>
+            </div>
+        `;
   }).join('');
 }
+
 el('blockedList').addEventListener('click', async e => {
-  const button = e.target.closest('button[data-delete-block]'); if (!button) return;
+  const button = e.target.closest(
+    'button[data-delete-block]'
+  );
+
+  if (!button) return;
+
   if (!confirm('Remove this venue block?')) return;
+
   button.disabled = true;
-  try { await rpc('deleteBlock', { id: button.dataset.deleteBlock }); await loadBlocks(); setText('blockMessage', 'Block removed.', 'success'); }
-  catch (err) { button.disabled = false; setText('blockMessage', err.message, 'error'); }
+
+  try {
+    await rpc('deleteBlock', {
+      id: button.dataset.deleteBlock
+    });
+
+    await loadBlocks();
+
+    setText(
+      'blockMessage',
+      'Block removed.',
+      'success'
+    );
+
+  } catch (err) {
+    button.disabled = false;
+
+    setText(
+      'blockMessage',
+      err.message,
+      'error'
+    );
+  }
 });
+
 el('blockForm').addEventListener('submit', async e => {
-  e.preventDefault(); const button = el('createBlockButton'), type = val('blockType');
-  const payload = { type, date: type === 'specific' ? val('blockDate') : '', weekday: type === 'weekly' ? Number(val('blockWeekday')) : undefined, venue: val('blockVenue'), startTime: val('blockStartTime'), endTime: val('blockEndTime'), reason: val('blockReason') };
-  if (type === 'specific' && !payload.date) { setText('blockMessage', 'Select a date.', 'error'); return; }
-  if (Boolean(payload.startTime) !== Boolean(payload.endTime)) { setText('blockMessage', 'Set both start and end time, or leave both empty.', 'error'); return; }
-  button.disabled = true; setText('blockMessage', 'Adding block…');
-  try { await rpc('addBlock', payload); await loadBlocks(); setText('blockMessage', 'Block saved.', 'success'); e.target.reset(); el('blockType').dispatchEvent(new Event('change')); }
-  catch (err) { setText('blockMessage', err.message, 'error'); }
-  finally { button.disabled = false; }
+  e.preventDefault();
+
+  const button = el('createBlockButton');
+  const type = val('blockType');
+  const weekly = type === 'weekly';
+
+  const payload = {
+    type,
+
+    date: weekly ? '' : val('blockDate'),
+
+    weekday: weekly
+      ? Number(val('blockWeekday'))
+      : undefined,
+
+    fromDate: weekly
+      ? val('blockFromDate')
+      : '',
+
+    untilDate: weekly
+      ? val('blockUntilDate')
+      : '',
+
+    venue: val('blockVenue'),
+    startTime: val('blockStartTime'),
+    endTime: val('blockEndTime'),
+    reason: val('blockReason')
+  };
+
+  // Validate specific date.
+  if (!weekly && !validBlockDate(payload.date)) {
+    setText(
+      'blockMessage',
+      'Select a valid date.',
+      'error'
+    );
+    return;
+  }
+
+  // Validate weekly date range.
+  if (weekly) {
+    if (
+      !validBlockDate(payload.fromDate) ||
+      !validBlockDate(payload.untilDate)
+    ) {
+      setText(
+        'blockMessage',
+        'Select both a valid from date and until date.',
+        'error'
+      );
+      return;
+    }
+
+    if (payload.untilDate < payload.fromDate) {
+      setText(
+        'blockMessage',
+        'Until date must not be before from date.',
+        'error'
+      );
+      return;
+    }
+
+    if (getBlockOccurrences().count === 0) {
+      setText(
+        'blockMessage',
+        'No matching weekday in the selected date range.',
+        'error'
+      );
+      return;
+    }
+  }
+
+  // Validate time.
+  if (
+    Boolean(payload.startTime) !==
+    Boolean(payload.endTime)
+  ) {
+    setText(
+      'blockMessage',
+      'Set both start and end time, or leave both empty.',
+      'error'
+    );
+    return;
+  }
+
+  if (
+    payload.startTime &&
+    payload.endTime <= payload.startTime
+  ) {
+    setText(
+      'blockMessage',
+      'End time must follow start time.',
+      'error'
+    );
+    return;
+  }
+
+  button.disabled = true;
+
+  setText('blockMessage', 'Adding block…');
+
+  try {
+    await rpc('addBlock', payload);
+
+    await loadBlocks();
+
+    setText(
+      'blockMessage',
+      'Block saved.',
+      'success'
+    );
+
+    e.target.reset();
+
+    updateBlockFields();
+
+  } catch (err) {
+    setText(
+      'blockMessage',
+      err.message,
+      'error'
+    );
+
+  } finally {
+    button.disabled = false;
+  }
 });
+
+updateBlockFields();
+
 
 /* Availability: uses ALL bookings independently of the dashboard booking-type filter. */
 const dateMatch = (b, date) => b.start && localDate(b.start) === date;
 function intersect(aStart, aEnd, bStart, bEnd) { return aStart < bEnd && aEnd > bStart; }
 function timeMins(time) { if (!time) return null; const [h, m] = time.split(':').map(Number); return h * 60 + m; }
+
 function findBlock(venue, date, weekday, startMins, endMins) {
   return blockedRules.find(b => {
-    if (b.venue && b.venue !== venue) return false;
-    if (b.type === 'specific' && b.date !== date) return false;
-    if (b.type === 'weekly' && Number(b.weekday) !== weekday) return false;
-    if (!b.startTime || !b.endTime) return true;
-    return startMins < timeMins(b.endTime) && endMins > timeMins(b.startTime);
+
+    // Check venue.
+    if (b.venue && b.venue !== venue) {
+      return false;
+    }
+
+    // Specific date block.
+    if (b.type === 'specific') {
+      if (b.date !== date) return false;
+    }
+
+    // Weekly block.
+    else if (b.type === 'weekly') {
+
+      if (Number(b.weekday) !== weekday) {
+        return false;
+      }
+
+      // Check effective start date.
+      if (b.fromDate && date < b.fromDate) {
+        return false;
+      }
+
+      // Check effective end date.
+      if (b.untilDate && date > b.untilDate) {
+        return false;
+      }
+
+    } else {
+      return false;
+    }
+
+    // Whole-day block.
+    if (!b.startTime || !b.endTime) {
+      return true;
+    }
+
+    // Check overlapping time slots.
+    return (
+      startMins < timeMins(b.endTime) &&
+      endMins > timeMins(b.startTime)
+    );
   });
 }
+
 function renderAvailabilityChart() {
   const day = val('adminAvailabilityDate') || localDate(new Date());
   const date = new Date(day + 'T00:00:00');

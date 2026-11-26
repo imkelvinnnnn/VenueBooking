@@ -254,15 +254,37 @@
                     <option value="5">Friday</option>
                     <option value="6">Saturday</option>
                   </select></div>
-                <div class="field"><label for="blockVenue">Venue <span class="optional">blank =
-                      all</span></label><select id="blockVenue">
+                <div class="field">
+                  <label for="blockVenue">
+                    Venue <span class="optional">blank = all</span>
+                  </label>
+                  <select id="blockVenue">
                     <option value="">All venues</option>
-                  </select></div>
+                  </select>
+                </div>
+                <div class="field" id="blockFromDateField" hidden>
+                  <label for="blockFromDate">From date *</label>
+                  <input type="date" id="blockFromDate" min="2000-01-01">
+                </div>
+
+                <div class="field" id="blockUntilDateField" hidden>
+                  <label for="blockUntilDate">Until date *</label>
+                  <input type="date" id="blockUntilDate" min="2000-01-01">
+                </div>
                 <div class="field"><label for="blockStartTime">Start time <span class="optional">blank = whole
                       day</span></label><input type="time" id="blockStartTime"></div>
                 <div class="field"><label for="blockEndTime">End time</label><input type="time" id="blockEndTime"></div>
                 <div class="field full"><label for="blockReason">Reason <span
                       class="optional">optional</span></label><input id="blockReason" placeholder="e.g. Maintenance">
+                </div>
+                <div class="field full" id="blockPreviewField" hidden>
+                  <label>Preview</label>
+
+                  <div class="occurrence-preview">
+                    <strong id="blockCount">0 occurrences</strong>
+
+                    <div id="blockPreview" class="occurrence-tags"></div>
+                  </div>
                 </div>
                 <div class="form-end full"><button type="submit" class="btn btn-primary" id="createBlockButton">Add
                     block</button></div>
