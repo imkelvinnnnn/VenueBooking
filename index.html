@@ -10,30 +10,67 @@
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-<style>
-/* Multiple venue selection */
-.venue-picker {
-  display: grid; gap: 6px; max-height: 235px; overflow-y: auto;
-  padding: 10px; border: 1px solid #d0d5dd; border-radius: 8px;
-  background: #fff;
-}
-.venue-picker label.venue-choice {
-  display: flex; align-items: center; gap: 10px; padding: 7px 8px;
-  font-size: 13px; font-weight: 500; cursor: pointer; color: #344054;
-  margin: 0; border-radius: 5px;
-}
-.venue-picker label.venue-choice:hover { background: #f2f4f7; }
-.venue-picker label.venue-choice input[type="checkbox"] {
-  appearance: auto; width: 17px; height: 17px; min-width: 17px;
-  padding: 0; margin: 0; flex: 0 0 17px; accent-color: #2259b8;
-}
-.venue-picker.invalid { border-color: #b42318; }
-#locationLabel { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
-.venue-picker-help { font-size: 12px; color: #667085; margin: 4px 0; }
-</style>
+  <style>
+    /* Multiple venue selection */
+    .venue-picker {
+      display: grid;
+      gap: 6px;
+      max-height: 235px;
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .venue-picker label.venue-choice {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      color: #344054;
+      margin: 0;
+      border-radius: 5px;
+    }
+
+    .venue-picker label.venue-choice:hover {
+      background: #f2f4f7;
+    }
+
+    .venue-picker label.venue-choice input[type="checkbox"] {
+      appearance: auto;
+      width: 17px;
+      height: 17px;
+      min-width: 17px;
+      padding: 0;
+      margin: 0;
+      flex: 0 0 17px;
+      accent-color: #2259b8;
+    }
+
+    .venue-picker.invalid {
+      border-color: #b42318;
+    }
+
+    #locationLabel {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .venue-picker-help {
+      font-size: 12px;
+      color: #667085;
+      margin: 4px 0;
+    }
+  </style>
 </head>
 
-<body>
+<body class="booking-page">
 
   <div class="page-bg">
     <div class="cross-pattern"></div>
@@ -103,8 +140,9 @@
 
         <div class="field-group">
           <span id="locationLabel">Venues</span>
-                  <div id="location" class="venue-picker" role="group" aria-labelledby="locationLabel" data-venue-picker>Loading venues…</div>
-                  <small class="venue-picker-help">Select one or more venues.</small>
+          <div id="location" class="venue-picker" role="group" aria-labelledby="locationLabel" data-venue-picker>Loading
+            venues…</div>
+          <small class="venue-picker-help">Select one or more venues.</small>
           <span class="field-error" id="locationError"></span>
         </div>
 
@@ -131,9 +169,27 @@
             </div>
           </div>
 
-          <p class="availability-message" id="availabilityMessage">Loading availability…</p>
-          <div class="availability-chart-wrap">
-            <table class="availability-chart" id="availabilityChart" aria-label="Venue availability chart"></table>
+          <div class="availability-options">
+            <label class="selected-venues-toggle">
+              <input type="checkbox" id="showSelectedVenues">
+              <span>Show selected venues only</span>
+            </label>
+          </div>
+
+          <p class="availability-message" id="availabilityMessage">
+            Loading availability…
+          </p>
+
+          <p class="chart-scroll-hint">
+            Scroll horizontally to view more time slots.
+          </p>
+
+          <div class="availability-chart-wrap" tabindex="0" role="region"
+            aria-label="Scrollable venue availability chart">
+
+            <table class="availability-chart" id="availabilityChart" aria-label="Venue availability chart">
+            </table>
+
           </div>
         </div>
 

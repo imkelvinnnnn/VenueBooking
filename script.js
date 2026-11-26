@@ -550,6 +550,7 @@ function escapeHtml(value) {
 }
 
 function renderAvailabilityChart() {
+
   if (!availabilityChart || !availabilityDate) {
     return;
   }
@@ -568,114 +569,180 @@ function renderAvailabilityChart() {
     `${dateValue}T00:00:00`
   );
 
-  const head = `
-    <thead>
-      <tr>
-        <th scope="col">Time</th>
-        ${currentVenues.map(venue => `
-          <th scope="col">
-            ${escapeHtml(venue)}
-          </th>
-        `).join('')}
-      </tr>
-    </thead>
-  `;
+  // Filter selected venues.
+  const selected = selectedVenues('location');
 
-  const rows = [];
+  const showSelectedOnly =
+    document.getElementById('showSelectedVenues')
+      ?.checked;
+
+  const displayVenues =
+    showSelectedOnly && selected.length
+      ? currentVenues.filter(
+        venue => selected.includes(venue)
+      )
+      : currentVenues;
+
+  if (!displayVenues.length) {
+    availabilityChart.innerHTML = '';
+    availabilityChart.hidden = true;
+    return;
+  }
+
+  availabilityChart.hidden = false;
+
+  // Generate time slots.
+  const slots = [];
 
   for (
     let hour = CHART_START_HOUR;
     hour <= CHART_END_HOUR;
     hour += SLOT_MINUTES / 60
   ) {
+
     const slotStart = new Date(chartDay);
 
     slotStart.setHours(hour, 0, 0, 0);
 
     const slotEnd = new Date(
-      slotStart.getTime() + SLOT_MINUTES * 60000
+      slotStart.getTime() +
+      SLOT_MINUTES * 60000
     );
 
-    const cells = currentVenues.map(venue => {
-      const vkey = venueKey(venue);
+    slots.push({
+      hour,
+      start: slotStart,
+      end: slotEnd
+    });
+  }
 
-      // Match each venue individually.
+  // Calculate the required table width.
+  availabilityChart.style.setProperty(
+    '--slot-count',
+    String(slots.length)
+  );
+
+  // Column widths.
+  const columns = `
+    <colgroup>
+      <col class="venue-column">
+      <col span="${slots.length}">
+    </colgroup>
+  `;
+
+  // Time slots are now column headers.
+  const head = `
+    <thead>
+      <tr>
+        <th scope="col">Venue</th>
+
+        ${slots.map(slot => `
+          <th scope="col">
+            ${formatSlotTime(slot.start)}
+          </th>
+        `).join('')}
+
+      </tr>
+    </thead>
+  `;
+
+  // Each venue occupies one row.
+  const rows = displayVenues.map(venue => {
+
+    const vkey = venueKey(venue);
+
+    const cells = slots.map(slot => {
+
+      // Check existing bookings.
       const booking = currentBookings.find(item =>
+
         venueMatches(item.venue, vkey) &&
+
         localDateValue(item.start) === dateValue &&
+
         overlaps(
-          slotStart,
-          slotEnd,
+          slot.start,
+          slot.end,
           item.start,
           item.end
         )
+
       );
 
+      // Check blocked time slots.
       const blockReason = !booking
-        ? isBlockedSlot(dateValue, hour, vkey)
+        ? isBlockedSlot(
+          dateValue,
+          slot.hour,
+          vkey
+        )
         : null;
 
-      // Highlight every selected venue.
+      // Highlight selected venues and booking time.
       const isRequested =
         requested &&
         requestedDate === dateValue &&
-        venueMatches(requested.venue, vkey) &&
+
+        venueMatches(
+          requested.venue,
+          vkey
+        ) &&
+
         overlaps(
-          slotStart,
-          slotEnd,
+          slot.start,
+          slot.end,
           requested.start,
           requested.end
         );
 
-      let state;
-      let label;
-      let titleText;
+      const unavailable =
+        Boolean(booking || blockReason);
 
-      if (booking) {
-        state = 'booked';
-        label = 'Unavailable';
-        titleText = 'Unavailable';
+      const state = unavailable
+        ? 'booked'
+        : 'open';
 
-      } else if (blockReason) {
-        state = 'booked';
-        label = 'Unavailable';
-
-        titleText = blockReason !== 'Blocked'
-          ? `Unavailable: ${blockReason}`
-          : 'Unavailable';
-
-      } else {
-        state = 'open';
-        label = 'Available';
-        titleText = 'Available';
-      }
+      const label = unavailable
+        ? 'Unavailable'
+        : 'Available';
 
       return `
         <td class="availability-cell
-          availability-cell-${state}${isRequested
-          ? ' availability-cell-selected'
-          : ''
-        }"
-          title="${escapeHtml(titleText)}">
+          availability-cell-${state}
+          ${isRequested
+          ? 'availability-cell-selected'
+          : ''}"
+
+          title="${escapeHtml(label)}">
 
           <span>${label}</span>
+
         </td>
       `;
 
     }).join('');
 
-    rows.push(`
+    return `
       <tr>
-        <th scope="row">
-          ${formatSlotTime(slotStart)}
-        </th>
-        ${cells}
-      </tr>
-    `);
-  }
 
-  availabilityChart.innerHTML =
-    `${head}<tbody>${rows.join('')}</tbody>`;
+        <th scope="row">
+          ${escapeHtml(venue)}
+        </th>
+
+        ${cells}
+
+      </tr>
+    `;
+
+  }).join('');
+
+  availabilityChart.innerHTML = `
+    ${columns}
+    ${head}
+    <tbody>
+      ${rows}
+    </tbody>
+  `;
 }
 
 async function loadAvailability() {
@@ -1011,6 +1078,12 @@ document.getElementById('duration')
   );
 
 document.getElementById('location')
+  ?.addEventListener(
+    'change',
+    renderAvailabilityChart
+  );
+
+document.getElementById('showSelectedVenues')
   ?.addEventListener(
     'change',
     renderAvailabilityChart
