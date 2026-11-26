@@ -18,199 +18,200 @@ const EXPORT_DAYS = [
 
 /* Venue mapping based on the Excel template */
 
+function createExportRoom(label, aliases = []) {
+    return {
+        label,
+        aliases
+    };
+}
+
+function createClassrooms(building, prefix, numbers) {
+    return numbers.map(number => {
+        const code =
+            prefix + String(number).padStart(2, '0');
+
+        return createExportRoom(
+            `${building} Building Classroom ${code}`,
+            [
+                `${building} Building ${code}`,
+                `${building} Classroom ${code}`,
+                `${building} ${code}`
+            ]
+        );
+    });
+}
+
+const CLASSROOM_NUMBERS = Array.from(
+    { length: 17 },
+    (_, i) => i + 1
+);
+
 const EXPORT_GROUPS = [
     {
         title: '旧堂 OLD BUILDING',
+
         rooms: [
-            {
-                label: '停车场 (Car Park)',
-                aliases: ['Car Park', '停车场']
-            },
-            {
-                label: '中文图书馆 (Chi Library)',
-                aliases: [
+            createExportRoom(
+                'Car Park 停车场',
+                ['Car Park', '停车场']
+            ),
+
+            createExportRoom(
+                'Chinese Library 华文图书馆',
+                [
                     'Chinese Library',
-                    'Chinese Library 华文图书馆',
                     'Chi Library',
                     'Library-Chinese',
                     '华文图书馆',
                     '中文图书馆'
                 ]
-            },
-            {
-                label: '英文图书馆 (Eng Library)',
-                aliases: [
+            ),
+
+            createExportRoom(
+                'English Library 英文图书馆',
+                [
+                    'English Library',
                     'Eng Library',
                     'Eng Library 英文图书馆',
-                    'English Library',
                     'Library-English',
                     '英文图书馆'
                 ]
-            },
-            {
-                label: '副堂 (Function Hall)',
-                aliases: [
-                    'Function Hall',
-                    'Function Hall 副堂',
-                    '副堂'
-                ]
-            },
-            {
-                label: '食堂 (Canteen)',
-                aliases: [
-                    'Old Canteen',
-                    'Old Canteen 旧楼食堂',
-                    '旧楼食堂'
-                ]
-            },
-            {
-                label: '儿童音乐室 (Children Music Room) G04',
-                aliases: [
-                    'Children Music Room',
-                    'Children Music Room G04',
-                    'G04',
-                    '儿童音乐室'
-                ]
-            },
-            {
-                label: '宣恩园地 (Graceland)',
-                aliases: [
-                    'Graceland',
-                    'Graceland 宣恩园地',
-                    '宣恩园地'
-                ]
-            },
-            {
-                label: '康乐室 (Children Play Room)',
-                aliases: [
-                    'Children Play Room',
-                    '康乐室'
-                ]
-            },
-            {
-                label: '会议室 (Meeting Room)',
-                aliases: [
+            ),
+
+            createExportRoom(
+                'Old Canteen 旧楼食堂',
+                ['Old Canteen', '旧楼食堂']
+            ),
+
+            createExportRoom(
+                'Graceland 宣恩园地',
+                ['Graceland', '宣恩园地']
+            ),
+
+            createExportRoom(
+                'Main Hall 大堂',
+                ['Main Hall', 'Sanctuary Hall', '大堂']
+            ),
+
+            createExportRoom(
+                'Function Hall 副堂',
+                ['Function Hall', '副堂']
+            ),
+
+            createExportRoom(
+                'Conference Room 会议室',
+                [
+                    'Conference Room',
                     'Meeting Room',
                     '会议室'
                 ]
-            },
-            {
-                label: '辅导室 (Counseling Room) F13',
-                aliases: [
+            ),
+
+            createExportRoom(
+                'Children Music Room 儿童音乐室 G04',
+                [
+                    'Children Music Room',
+                    'Children Music Room G04',
+                    '儿童音乐室',
+                    'G04'
+                ]
+            ),
+
+            createExportRoom(
+                'Children Play Room 康乐室',
+                ['Children Play Room', '康乐室']
+            ),
+
+            createExportRoom(
+                'Counseling Room 辅导室 F13',
+                [
                     'Counseling Room',
                     'Counselling Room',
-                    'F13',
+                    'Counseling Room F13',
                     '辅导室'
                 ]
-            },
-            {
-                label: '会客室',
-                aliases: [
+            ),
+
+            ...createClassrooms(
+                'Old',
+                'F',
+                [1, 3, 6, 7, 15, 16]
+            ),
+
+            createExportRoom(
+                'For office only 会客室',
+                [
+                    'For office only',
                     'Reception Room',
                     '会客室'
                 ]
-            },
-            {
-                label: 'Classroom F01',
-                aliases: [
-                    'Old F01',
-                    'Old Building F01',
-                    'Old Classroom F01'
-                ]
-            },
-            {
-                label: 'Classroom F03',
-                aliases: ['F03', 'Classroom F03']
-            },
-            {
-                label: 'Classroom F06',
-                aliases: ['F06', 'Classroom F06']
-            },
-            {
-                label: 'Classroom F07',
-                aliases: ['F07', 'Classroom F07']
-            },
-            {
-                label: 'Classroom F15',
-                aliases: ['F15', 'Classroom F15']
-            },
-            {
-                label: 'Classroom F16',
-                aliases: ['F16', 'Classroom F16']
-            },
-            {
-                label: '大堂 (Sanctuary Hall)',
-                aliases: [
-                    'Main Hall',
-                    'Main Hall 大堂',
-                    'Sanctuary Hall',
-                    '大堂'
-                ]
-            }
+            )
         ]
     },
+
     {
         title: '新堂 NEW BUILDING',
+
         rooms: [
-            {
-                label: '保罗厅 (Paul Hall)',
-                aliases: [
-                    'Paul Hall',
-                    'Paul Hall 保罗堂',
-                    '保罗堂',
-                    '保罗厅'
-                ]
-            },
-            {
-                label: '约翰厅 (John Hall)',
-                aliases: [
-                    'John Hall',
-                    'John Hall 约翰堂',
-                    '约翰堂',
-                    '约翰厅'
-                ]
-            },
-            {
-                label: '彼得厅 (Peter Hall)',
-                aliases: [
-                    'Peter Hall',
-                    'Peter Hall 彼得堂',
-                    '彼得堂',
-                    '彼得厅'
-                ]
-            },
-            {
-                label: 'VIP Room',
-                aliases: ['VIP Room']
-            },
-            {
-                label: '食堂 (Canteen)',
-                aliases: [
-                    'New Canteen',
-                    'New Canteen 新楼食堂',
-                    '新楼食堂'
-                ]
-            },
-            {
-                label: '顶楼 (Rooftop)',
-                aliases: ['Rooftop', '顶楼']
-            },
-            {
-                label: 'Classroom C07',
-                aliases: ['C07', 'Classroom C07']
-            },
-            {
-                label: 'Classroom F01',
-                aliases: [
-                    'New F01',
-                    'New Building F01',
-                    'New Classroom F01'
-                ]
-            },
-            {
-                label: 'Classroom E01',
-                aliases: ['E01', 'Classroom E01']
-            }
+            createExportRoom(
+                'Paul Hall 保罗堂',
+                ['Paul Hall', '保罗堂', '保罗厅']
+            ),
+
+            createExportRoom(
+                'John Hall 约翰堂',
+                ['John Hall', '约翰堂', '约翰厅']
+            ),
+
+            createExportRoom(
+                'Peter Hall 彼得堂',
+                ['Peter Hall', '彼得堂', '彼得厅']
+            ),
+
+            createExportRoom(
+                'New Canteen 新楼食堂',
+                ['New Canteen', '新楼食堂']
+            ),
+
+            createExportRoom(
+                'VIP Room 贵宾室',
+                ['VIP Room', '贵宾室']
+            ),
+
+            createExportRoom(
+                'Rooftop 顶楼',
+                ['Rooftop', '顶楼']
+            ),
+
+            ...createClassrooms(
+                'New',
+                'A',
+                CLASSROOM_NUMBERS
+            ),
+
+            ...createClassrooms(
+                'New',
+                'C',
+                CLASSROOM_NUMBERS
+            ),
+
+            ...createClassrooms(
+                'New',
+                'D',
+                CLASSROOM_NUMBERS
+            ),
+
+            ...createClassrooms(
+                'New',
+                'E',
+                CLASSROOM_NUMBERS
+            ),
+
+            ...createClassrooms(
+                'New',
+                'F',
+                CLASSROOM_NUMBERS
+            )
         ]
     }
 ];
@@ -442,11 +443,9 @@ async function generateWeeklyExcel(
             'ExcelJS could not be loaded.'
         );
     }
-
-    const groups = buildExportGroups([
-        ...venueList,
-        ...bookings.map(b => b.venue)
-    ]);
+    const groups = buildExportGroups(
+        bookings.map(b => b.venue)
+    );
 
     // Group bookings by venue and date.
     for (const booking of bookings) {
@@ -481,6 +480,30 @@ async function generateWeeklyExcel(
                 room.bookings[index].push(booking);
             }
         });
+    }
+    // Keep only venues with at least one booking
+    // within the selected week.
+
+    const activeGroups = groups
+        .map(group => ({
+            ...group,
+
+            rooms: group.rooms.filter(room =>
+                room.bookings.some(day =>
+                    day.length > 0
+                )
+            )
+        }))
+
+        // Hide the building heading if there
+        // are no bookings in the entire building.
+        .filter(group => group.rooms.length > 0);
+
+
+    if (activeGroups.length === 0) {
+        throw new Error(
+            'No approved bookings found for the selected week.'
+        );
     }
 
     const workbook = new ExcelJS.Workbook();
@@ -600,7 +623,7 @@ async function generateWeeklyExcel(
 
     let rowNumber = 3;
 
-    for (const group of groups) {
+    for (const group of activeGroups) {
 
         sheet.mergeCells(
             `A${rowNumber}:H${rowNumber}`
