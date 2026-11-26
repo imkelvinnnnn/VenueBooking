@@ -337,11 +337,9 @@ function normalizeWhatsAppPhone(value) {
 }
 function whatsappMessage(b) {
   return [
-    `Hi ${b.name || 'there'}, your booking has been confirmed.`,
-    '', '*Booking Information*', `Booking Reference: ${b.ref}`,
-    `Event: ${b.title}`, `Venue: ${b.venue}`,
-    `Start: ${formatDate(b.start)}`, `End: ${formatDate(b.end)}`,
-    'Status: Approved', '', 'Thank you.'
+    `${b.name}, 平安。这个是您已预定的场地通知，若有任何更改，请再通知行政部电话号码019-262 8331，或活动与场地负责人-凯仪姐妹012-522 2528，谢谢。`,
+    `\n`,
+    `离开前，请关闭所有电源开关，保持场地清洁整齐。让我们一起爱护神的教会，谢谢。`
   ].join('\n');
 }
 function buildWhatsAppUrl(b) {
