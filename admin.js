@@ -342,7 +342,6 @@ function whatsappMessage(b) {
     '',
     `_注：离开前，请关闭所有电源开关，保持场地清洁整齐。让我们一起爱护神的教会，谢谢。_`,
     '', '*预定信息*',
-    `预定编号: ${b.ref}`,
     `活动: ${b.title}`,
     `地点: ${b.venue}`,
     `开始时间: ${formatDate(b.start)}`, `结束时间: ${formatDate(b.end)}`,
