@@ -220,9 +220,9 @@
               <form id="normalBookingForm" class="tool-form">
                 <div class="field full"><label for="normalEventTitle">Event title *</label><input id="normalEventTitle"
                     maxlength="200" required placeholder="e.g. Youth Fellowship"></div>
-                <div class="field"><label for="normalVenue">Venue *</label><select id="normalVenue" required>
-                    <option value="">Select venue</option>
-                  </select></div>
+                <div class="field full"><span id="normalVenueLabel">Venues *</span>
+                  <div id="normalVenue" class="venue-picker" role="group" aria-labelledby="normalVenueLabel" data-venue-picker>Loading venues…</div>
+                  <small class="venue-picker-help">Select one or more venues.</small></div>
                 <div class="field"><label for="normalStart">Booking date and time *</label><input type="datetime-local"
                     id="normalStart" required></div>
                 <div class="field"><label for="normalDuration">Duration (hours) *</label><input type="number"
@@ -255,9 +255,9 @@
               <form id="recurringBookingForm" class="tool-form">
                 <div class="field full"><label for="recurringEventTitle">Event title *</label><input
                     id="recurringEventTitle" required maxlength="200"></div>
-                <div class="field"><label for="recurringVenue">Venue *</label><select id="recurringVenue" required>
-                    <option value="">Select venue</option>
-                  </select></div>
+                <div class="field full"><span id="recurringVenueLabel">Venues *</span>
+                  <div id="recurringVenue" class="venue-picker" role="group" aria-labelledby="recurringVenueLabel" data-venue-picker>Loading venues…</div>
+                  <small class="venue-picker-help">Select one or more venues.</small></div>
                 <div class="field"><label for="recurringWeekday">Every *</label><select id="recurringWeekday" required>
                     <option value="0">Sunday</option>
                     <option value="1">Monday</option>
@@ -385,7 +385,9 @@
             required></div>
         <div class="field"><label for="editDuration">Duration (hours)</label><input type="number" step="0.5" min="0.5"
             max="14" id="editDuration" required></div>
-        <div class="field full"><label for="editLocation">Venue</label><select id="editLocation" required></select>
+        <div class="field full"><span id="editLocationLabel">Venues *</span>
+                  <div id="editLocation" class="venue-picker" role="group" aria-labelledby="editLocationLabel" data-venue-picker>Loading venues…</div>
+                  <small class="venue-picker-help">Select one or more venues.</small>
         </div>
         <div class="field full">
           <label for="editNotes">Notes</label>
