@@ -12,7 +12,9 @@
     href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="admin.css">
+  <script src="exceljs.min.js" defer></script>
   <script src="admin.js" defer></script>
+  <script src="weekly-export.js" defer></script>
 </head>
 
 <body>
@@ -65,8 +67,73 @@
             <h2>Bookings</h2>
             <p class="muted">Manage requests or filter out recurring reservations.</p>
           </div>
-          <div class="header-actions"><button class="btn btn-secondary" type="button" id="jumpAddBooking">+ Add
-              booking</button><button type="button" class="btn btn-secondary" id="adminRefresh">↻ Refresh</button></div>
+          <div class="header-actions">
+
+            <button class="btn btn-secondary" type="button" id="jumpAddBooking">
+              + Add booking
+            </button>
+
+            <button type="button" class="btn btn-secondary" id="adminRefresh">
+              ↻ Refresh
+            </button>
+
+            <button type="button" class="btn btn-primary" id="exportWeeklyBtn">
+              Export Weekly Excel
+            </button>
+
+          </div>
+        </div>
+        <div id="weeklyExportPanel" class="occurrence-preview" style="margin-bottom: 16px; padding: 20px;" hidden>
+
+          <h2>Export weekly booking record</h2>
+
+          <p class="muted">
+            Export approved normal and recurring bookings
+            from Friday to Thursday.
+          </p>
+
+          <br>
+
+          <div class="tool-form">
+
+            <div class="field">
+              <label for="exportWeekDate">
+                Select any date within the week
+              </label>
+
+              <input type="date" id="exportWeekDate" min="2000-01-01">
+            </div>
+
+            <div class="field">
+              <label>Export period</label>
+
+              <input type="text" id="exportWeekRange" readonly>
+            </div>
+
+            <label class="full">
+              <input type="checkbox" id="exportIncludeNotes">
+              Include booking notes
+            </label>
+
+            <div class="form-end full">
+
+              <button type="button" class="btn btn-secondary" id="closeWeeklyExport">
+                Cancel
+              </button>
+
+              &nbsp;
+
+              <button type="button" class="btn btn-primary" id="downloadWeeklyExcel">
+                Download Excel
+              </button>
+
+            </div>
+
+          </div>
+
+          <p id="weeklyExportMessage" class="message" role="status">
+          </p>
+
         </div>
         <div class="filters" role="group" aria-label="Booking filters">
           <div class="field search-field"><label for="filterSearch">Search</label><input type="search" id="filterSearch"
