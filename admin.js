@@ -335,32 +335,98 @@ function normalizeWhatsAppPhone(value) {
   else if (digits.startsWith('60')) phone = digits;
   return /^601\d{8,9}$/.test(phone) ? phone : '';
 }
-function whatsappMessage(b) {
+function whatsappMessage(b, updated = false) {
+  const pending = b.status === 'pending';
+
+  const intro = updated
+    ? (
+      pending
+        ? '您的场地申请备注已更新，目前仍待审核。以下是最新的申请信息。'
+        : '您的场地预定备注已更新，以下是最新的预定信息。'
+    )
+    : '这个是您已预定的场地通知。';
+
   return [
-    `${b.name}，平安。`,
-    `这个是您已预定的场地通知，若有任何更改，请再通知行政部电话号码019-262 8331，或活动与场地负责人-朱凯仪姐妹012-522 2528，谢谢。`,
+    `${b.name || '您好'}，平安。`,
+    '若有任何更改，请再通知行政部电话号码019-262 8331，或活动与场地负责人-朱凯仪姐妹012-522 2528，谢谢。',
+
     '',
-    `_注：离开前，请关闭所有电源开关，保持场地清洁整齐。让我们一起爱护神的教会，谢谢。_`,
-    '', '*预定信息*',
+
+    '_注：离开前，请关闭所有电源开关，保持场地清洁整齐。让我们一起爱护神的教会，谢谢。_',
+
+    '',
+
+    pending ? '*申请信息*' : '*预定信息*',
+
     `活动: ${b.title}`,
     `地点: ${b.venue}`,
-    `开始时间: ${formatDate(b.start)}`, `结束时间: ${formatDate(b.end)}`,
-    '', '谢谢'
+    `开始时间: ${formatDate(b.start)}`,
+    `结束时间: ${formatDate(b.end)}`,
+
+    '',
+
+    '*备注*',
+    String(b.notes || '').trim() || '无',
+
+    '',
+    '谢谢'
+
   ].join('\n');
 }
-function buildWhatsAppUrl(b) {
+function buildWhatsAppUrl(b, updated = false) {
   const phone = normalizeWhatsAppPhone(b.phone);
-  return b.status === 'approved' && phone ? `https://wa.me/${phone}?text=${encodeURIComponent(whatsappMessage(b))}` : '';
+
+  const allowed =
+    b.status === 'approved' ||
+    (updated && b.status === 'pending');
+
+  if (!allowed || !phone) return '';
+
+  return `https://wa.me/${phone}?text=${encodeURIComponent(whatsappMessage(b, updated))
+    }`;
 }
-function openWhatsAppModal(b) {
-  if (b.status !== 'approved') return;
-  const phone = normalizeWhatsAppPhone(b.phone), url = buildWhatsAppUrl(b);
-  setText('whatsappModalRecipient', `Recipient: ${b.name || 'Organizer'} (${phone ? '+' + phone : 'No valid phone number'})`);
-  setText('whatsappModalMessage', whatsappMessage(b));
+function openWhatsAppModal(b, updated = false) {
+  const allowed =
+    b.status === 'approved' ||
+    (updated && b.status === 'pending');
+
+  if (!allowed) return;
+
+  const phone = normalizeWhatsAppPhone(b.phone);
+  const url = buildWhatsAppUrl(b, updated);
+
+  setText(
+    'whatsappModalTitle',
+    updated ? 'Booking notes updated' : 'Booking approved'
+  );
+
+  setText(
+    'whatsappModalRecipient',
+    `Recipient: ${b.name || 'Organizer'} (${phone ? '+' + phone : 'No valid phone number'
+    })`
+  );
+
+  setText(
+    'whatsappModalMessage',
+    whatsappMessage(b, updated)
+  );
+
   el('whatsappOpenBtn').hidden = !url;
-  if (url) el('whatsappOpenBtn').href = url;
-  else el('whatsappOpenBtn').removeAttribute('href');
-  setText('whatsappModalNotice', url ? 'The message is prepared. Press Send in WhatsApp manually.' : 'No valid phone number. Edit this booking to add one.', url ? 'ready' : 'error');
+
+  if (url) {
+    el('whatsappOpenBtn').href = url;
+  } else {
+    el('whatsappOpenBtn').removeAttribute('href');
+  }
+
+  setText(
+    'whatsappModalNotice',
+    url
+      ? 'The message is prepared. Press Send in WhatsApp manually.'
+      : 'No valid phone number. Edit this booking to add one.',
+    url ? 'ready' : 'error'
+  );
+
   openModal('whatsappModal');
 }
 function openModal(id) { el(id).hidden = false; document.body.classList.add('modal-open'); }
@@ -400,12 +466,74 @@ function openEditModal(b) {
   setText('editMessage', ''); openModal('editModal');
 }
 el('editForm').addEventListener('submit', async e => {
-  e.preventDefault(); const button = el('editSaveBtn'); button.disabled = true;
-  const payload = { bookingId: val('editRef'), name: val('editName'), memberCode: val('editMemberCode'), email: val('editEmail'), phone: val('editPhone'), eventTitle: val('editEventTitle'), start: val('editStart'), duration: Number(val('editDuration')), location: val('editLocation'), notes: val('editNotes') };
-  setText('editMessage', 'Saving…');
-  try { await rpc('editBooking', payload); closeModal('editModal'); await loadBookings(); setText('adminMessage', 'Booking details updated.', 'success'); }
-  catch (err) { setText('editMessage', err.message, 'error'); }
-  finally { button.disabled = false; }
+  e.preventDefault();
+
+  const button = el('editSaveBtn');
+  button.disabled = true;
+
+  const payload = {
+    bookingId: val('editRef'),
+    name: val('editName'),
+    memberCode: val('editMemberCode'),
+    email: val('editEmail'),
+    phone: val('editPhone'),
+    eventTitle: val('editEventTitle'),
+    start: val('editStart'),
+    duration: Number(val('editDuration')),
+    location: val('editLocation'),
+    notes: val('editNotes')
+  };
+
+  setText('editMessage', 'Saving...');
+
+  try {
+    const result = await rpc('editBooking', payload);
+
+    closeModal('editModal');
+
+    // Show WhatsApp only if notes were changed.
+    if (result.notesChanged && result.booking) {
+      const savedBooking = normalizeBooking(
+        result.booking
+      );
+
+      if (
+        savedBooking.status === 'approved' ||
+        savedBooking.status === 'pending'
+      ) {
+        openWhatsAppModal(savedBooking, true);
+      }
+    }
+
+    try {
+      await loadBookings();
+
+      setText(
+        'adminMessage',
+        result.notesChanged
+          ? 'Booking notes updated successfully.'
+          : 'Booking details updated.',
+        'success'
+      );
+
+    } catch (refreshError) {
+      setText(
+        'adminMessage',
+        'Booking saved, but dashboard refresh failed. Please refresh manually.',
+        'error'
+      );
+    }
+
+  } catch (err) {
+    setText(
+      'editMessage',
+      err.message,
+      'error'
+    );
+
+  } finally {
+    button.disabled = false;
+  }
 });
 
 /* Admin creates one-time booking, immediately Approved. */

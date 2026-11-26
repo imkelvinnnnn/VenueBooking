@@ -552,7 +552,7 @@ function openModal(booking) {
   document.getElementById('confirmDetails').innerHTML = rows.map(([label, val]) => `
     <div class="detail-row">
       <span class="detail-label">${label}</span>
-      <span class="detail-value">${val}</span>
+      <span class="detail-value">${escapeHtml(val)}</span>
     </div>
   `).join('');
 

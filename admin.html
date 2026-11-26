@@ -320,7 +320,17 @@
             max="14" id="editDuration" required></div>
         <div class="field full"><label for="editLocation">Venue</label><select id="editLocation" required></select>
         </div>
-        <div class="field full"><label for="editNotes">Notes</label><textarea id="editNotes" rows="3"></textarea></div>
+        <div class="field full">
+          <label for="editNotes">Notes</label>
+
+          <textarea id="editNotes" rows="4" maxlength="2000"
+            placeholder="Enter booking requirements or instructions..."></textarea>
+
+          <small class="muted">
+            Notes will be synchronized with Google Calendar
+            and included in the WhatsApp message.
+          </small>
+        </div>
         <p class="message full" id="editMessage" role="status"></p>
         <div class="modal-actions full"><button type="submit" id="editSaveBtn" class="btn btn-primary">Save
             changes</button><button type="button" id="editCancelBtn" class="btn btn-secondary">Cancel</button></div>
@@ -335,8 +345,10 @@
           <h2 id="whatsappModalTitle">Booking approved</h2>
         </div><button type="button" class="icon-button" id="whatsappCloseIcon" aria-label="Close">✕</button>
       </div>
-      <p class="muted">Review the confirmation below. WhatsApp opens with a prefilled message; you must press Send
-        manually.</p>
+      <p class="muted">
+        Review the message below. WhatsApp opens with
+        a prefilled message; you must press Send manually.
+      </p>
       <p id="whatsappModalRecipient" class="recipient"></p>
       <pre class="whatsapp-preview" id="whatsappModalMessage"></pre>
       <p id="whatsappModalNotice" class="message" role="status"></p>
